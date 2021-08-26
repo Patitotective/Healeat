@@ -7,7 +7,7 @@
 
 ## Screenshots
 [![Main screen](https://github.com/Patitotective/Healeat/blob/main/Screenshots/main_screen.png?raw=true)](https://github.com/Patitotective/Healeat)
-[![Calories per day chart (by meals)](https://github.com/Patitotective/Healeat/blob/main/Screenshots/calories_per_day_chart%20(by%20meals)?raw=true)](https://github.com/Patitotective/Healeat) [![Calories per day chart (by foods)](https://github.com/Patitotective/Healeat/blob/main/Screenshots/calories_per_day_chart%20(by%20foods)?raw=true)](https://github.com/Patitotective/Healeat)
+[![Calories per day chart (by meals)](https://github.com/Patitotective/Healeat/blob/main/Screenshots/calories_per_day_chart%20(by%20meals).png?raw=true)](https://github.com/Patitotective/Healeat) [![Calories per day chart (by foods)](https://raw.githubusercontent.com/Patitotective/Healeat/main/Screenshots/calories_per_day_chart%20(by%20foods).png?raw=true)](https://github.com/Patitotective/Healeat)
 
 
 
