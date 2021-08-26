@@ -1,0 +1,27 @@
+#PREFS
+# Sources:
+# https://www.who.int/news-room/fact-sheets/detail/healthy-diet
+# https://wholegrainscouncil.org/sites/default/files/atoms/files/WG_HowMuch.pdf
+# https://www.health.harvard.edu/blog/how-much-protein-do-you-need-every-day-201506188096
+# https://www.health.harvard.edu/blog/dairy-health-food-or-health-risk-2019012515849
+# https://healthfully.com/how-much-oil-should-you-eat-12681816.html
+# https://www.bodybuilding.com/fun/fats_calculator.htm
+# https://www.nia.nih.gov/health/usda-food-patterns
+# https://www.nia.nih.gov/health/know-your-food-groups#sofas
+ideal_portions=>
+	vegetables='1.7 * weight'
+	grains='0.7 * weight'
+	fruits='1.8 * weight'
+	protein='2 * weight'
+	dairy='1.8 * weight'
+	oils_and_fats='3 * weight'
+	#carbohidrates='BMR / 8'
+	other='2 * weight'
+portion_max='{} * 2'
+ideal_meal_portions=>
+	breakfast='BMR / 3.5'
+	lunch='BMR / 3.5'
+	dinner='BMR / 4.6'
+	others='BMR / 4.6'
+
+
