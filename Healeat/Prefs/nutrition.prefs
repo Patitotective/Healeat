@@ -8,15 +8,15 @@
 # https://www.bodybuilding.com/fun/fats_calculator.htm
 # https://www.nia.nih.gov/health/usda-food-patterns
 # https://www.nia.nih.gov/health/know-your-food-groups#sofas
+# Nutritional tip source: https://www.healthline.com/nutrition/27-health-and-nutrition-tips
 ideal_portions=>
-	vegetables='1.7 * weight'
-	grains='0.7 * weight'
-	fruits='1.8 * weight'
-	protein='2 * weight'
-	dairy='1.8 * weight'
-	oils_and_fats='3 * weight'
-	#carbohidrates='BMR / 8'
-	other='2 * weight'
+	vegetables='1.7*weight*3.0'
+	grains='0.7*weight*3.0'
+	fruits='1.8*weight*3.0'
+	protein='2.0*weight*3.0'
+	dairy='1.8*weight*3.0'
+	oils_and_fats='3.0*weight*3.0'
+	other='2.0*weight*3.0'
 portion_max='{} * 2'
 ideal_meal_portions=>
 	breakfast='BMR / 3.5'

@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="Fonts/Alatsi regular.ttf">Fonts/Alatsi regular.ttf</file>
+    <file alias="Fonts/Ubuntu-BI.ttf">Fonts/Ubuntu-BI..ttf</file>
+</qresource>
+</RCC>

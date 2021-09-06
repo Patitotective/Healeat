@@ -1,12 +1,12 @@
 #PREFS
-current_user='Tim'
+current_user='Emtpy'
 state=>
 	settings_dialog=>
-		pos=(1008, 0)
+		pos=(1007, 0)
 		size=(500, 400)
 	main_window=>
-		pos=(324, 118)
-		size=(1440, 805)
+		pos=(0, 0)
+		size=(1920, 950)
 	meal_tabs_splitters=>
 		0=[621, 682]
 		1=[528, 530]

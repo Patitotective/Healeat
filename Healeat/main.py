@@ -1,22 +1,24 @@
 """
-Made for Timathon code jam
+Healeat
+---
+Made for Timathon's code jam
 
-Description: Diet is a simple GUI app that asks for your diet and says you what you're missing. 
+Description: Healeat is a simple way to measure your calories, watch some charts about your diet and get advices.
 Team (solo): Heatlhy tim
+GitHub page: https://github.com/Patitotective/Healeat
 
 To see the nutritional sources see Prefs/nutrition.prefs
 
 Made by Patitotective
 Contact me:
 	Discord: patitotective#0217
-	Mail: cristobalriaga@gmail.com
+	Email: cristobalriaga@gmail.com
 """
 
 # Libraries
 import sys
 import os
 
-# PyQt5
 from PyQt5.QtWidgets import (
 	QMainWindow, QWidget, 
 	QSlider, QLabel, 
@@ -30,12 +32,12 @@ from PyQt5.QtWidgets import (
 	QStylePainter, QStyleOptionTab, 
 	QStyle, QDialog, 
 	QLineEdit, QScrollArea, 
-	QComboBox, QToolTip)
+	QComboBox, QToolTip, 
+	QShortcut, QDoubleSpinBox, 
+	QInputDialog, QLayout)
 
-from PyQt5 import QtGui, QtCore
-from PyQt5.QtGui import QPixmap, QIcon, QFontDatabase, QKeySequence
-from PyQt5.QtGui import QCursor, QPainter, QPalette, QColor
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QPixmap, QIcon, QFontDatabase, QKeySequence, QCursor, QPainter, QPalette, QColor, QFont, QFontMetricsF
+from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QRect
 
 from PyQt5.QtChart import (
 	QBarSet, QBarCategoryAxis, 
@@ -45,87 +47,128 @@ from PyQt5.QtChart import (
 
 import PREFS # https://patitotective.github.io/PREFS/
 import datetime
-import itertools
-import time
+import random
+import casestyle
+from collections import defaultdict
 
 # Dependencies
+from extra import (
+	remove_key_from_dict, rename_key_from_dict, 
+	snake_case_to_sentence_case, 
+	dict_max, create_horizontal_line, 
+	remove_elements_from_list, get_widgets_from_layout, 
+	get_widget_from_layout, choose_random_from_list, 
+	create_qaction, split_expression, 
+	StatementTypes, OPERATORS, 
+	GOODLOOKING_OPERATORS, GOODLOOKING_OPERATORS_TO_OPERATORS, 
+	OPERATORS_TO_GOODLOOKING_OPERATORS, map_widgets_from_layout, 
+	expression_to_goodlooking_expression, check_syntax)
+
+from scrollarea import ScrollArea
+from vertical_tab_widget import VerticalTabWidget
+from about_dialog import create_about_dialog
+from input_dialog import get_item_input_dialog, get_double_input_dialog, question_dialog
+from instructions_dialog import create_instructions_dialog
+
+TABULATION = "&nbsp;" * 4
 
 class MainWindow(QMainWindow):
-	def __init__(self, title, parent=None):
+	def __init__(self, title: str, parent=None, verbose: bool=False) -> None:
 		super().__init__(parent)
 		
+		self.verbose = verbose
 		self.title = title
-		
-		# self.setWindowIcon(QtGui.QIcon(':/icon.png'))
-		
-		self.window()
+				
+		self.init_window()
 		self.create_menu_bar()
 
-	def window(self):
+	def init_window(self):
+		if self.verbose: print(f"Create window ({self})")
+		
 		# Window settings
 		self.setWindowTitle(self.title)
-		#self.setMinimumSize(1200, 500)
+		self.setWindowIcon(QIcon('Images/icon.png')) # set the icon		
 
-		# creating MainWidget widget and setting it as central
-		self.main_widget = MainWidget(parent=self)
+		# Creating MainWidget instance and setting it as central widget
+		self.main_widget = MainWidget(parent=self, verbose=self.verbose)
+		self.setCentralWidget(self.main_widget)
 		
+		# Setting the pos and size of the window to the saved ones
 		main_window_size = self.main_widget.prefs.file["state"]["main_window"]["size"]
 		main_window_pos = self.main_widget.prefs.file["state"]["main_window"]["pos"]
 
 		self.resize(main_window_size[0], main_window_size[1])
 		self.move(main_window_pos[0], main_window_pos[1])
 
-		self.setCentralWidget(self.main_widget)
-
 	def create_menu_bar(self):
-		# filling up a menu bar
-		bar = self.menuBar()
+		"""Create menu bar."""
+		bar = self.menuBar() # Get the menu bar of the mainwindow
 		
+		## File menu ##
 		file_menu = bar.addMenu('&File')
-	
-		settings_action = self.create_qaction(
-			menu=file_menu, 
-			text="Settings", 
-			shortcut="Ctrl+S", 
-			callback=self.main_widget.settings_dialog)
 
-		close_action = self.create_qaction(
+		# Create an instructions action that will open the instructions dialog
+		instructions_action = create_qaction( 
+			menu=file_menu, 
+			text="&Instructions", 
+			shortcut="Ctrl+I", 
+			callback=create_instructions_dialog, 
+			parent=self)
+
+		# Create a close action that will call self.close_app
+		close_action = create_qaction(
 			menu=file_menu, 
 			text="Close", 
 			shortcut="Ctrl+Q", 
-			callback=self.close_app)
+			callback=self.close_app, 
+			parent=self)
 
-		# Edit menu
-		edit_menu = bar.addMenu('&Edit')
+		## Edit menu ##
+		edit_menu = bar.addMenu('&Edit') # Add a menu called edit
 
+		# Create a settings action that will open the settings dialog
+		settings_action = create_qaction( 
+			menu=edit_menu, 
+			text="&Settings", 
+			shortcut="Ctrl+S", 
+			callback=self.main_widget.settings_dialog, 
+			parent=self)
 
-		# About menu
-		about_menu = bar.addMenu('&About')
+		## About menu ##
+		about_menu = bar.addMenu('&About') # Add a menu called about
 
-		about_me_action = self.create_qaction(
+		# Create an about action that will create an instance of AboutDialog
+		about_me_action = create_qaction(
 			menu=about_menu, 
-			text="About diet", 
-			shortcut="Ctrl+d", 
-			callback=self.main_widget.create_about_me_dialog)
+			text="About &Healeat", 
+			shortcut="Ctrl+H", 
+			callback=lambda: create_about_dialog(
+				"About Healeat", 
+				body=f"""**Healeat** is nutrition tracker GUI application made using Python\\
+				for the Timathon code Jam with _health_ as theme.\\
+				\\
+				Libraries used:\\
+				- [_PyQt 5.15.4_](https://pypi.org/project/PyQt5/)\\
+				- [_PyQtChart 5.15.4_](https://pypi.org/project/PyQtChart/)\\
+				- [PREFS 0.2](https://patitotective.github.io/PREFS/)\\
+				- [_casestyle 0.0.4_](https://github.com/zhoujin7/casestyle)
+				""", 
+				icon=self.windowIcon(), 
+				contact={"Discord": "&nbsp;**patitotective**_#0127_", "Email": "[cristobalriaga@gmail.com](mailto:cristobalriaga@gmail.com)"}, 
+				source_code="[Source code](https://github.com/Patitotective/Healeat)", 
+				parent=self, 
+			), 
+			parent=self)
 
-	def create_qaction(self, menu, text: str, shortcut: str="", callback: callable=lambda: print("No callback")):
-		action = QAction(self)
-
-		if shortcut != "": # If the shortcut isn't empty
-			mnemo = shortcut.split("+")[1] # Split by + and get the key (a, b, c)
-			
-			shortcut_text = text.replace(mnemo, f"&{mnemo}", 1) # Underline the shortut letter 
-
-		action.setText(shortcut_text)
-		action.setShortcut(shortcut)
-
-		menu.addAction(action)
-		
-		action.triggered.connect(callback)
-
-		return action
+		about_qt_action = create_qaction(
+			menu=about_menu, 
+			text="About Q&t", 
+			shortcut="Ctrl+t", 
+			callback=lambda: QMessageBox.aboutQt(self), 
+			parent=self)
 
 	def close_app(self):
+		# Get the geometry (pos, size) of the window and store it in the prefs file.
 		main_window_geometry = self.geometry()
 
 		main_window_pos = main_window_geometry.x(), main_window_geometry.y() - 64
@@ -134,28 +177,29 @@ class MainWindow(QMainWindow):
 		self.main_widget.prefs.write_prefs("state/main_window/size", main_window_size)
 		self.main_widget.prefs.write_prefs("state/main_window/pos", main_window_pos)
 
+		# Close window and exit program to close all dialogs open.
 		self.close()
 		sys.exit()
 
-	def closeEvent(self, event):
+	def closeEvent(self, event) -> None:
+		"""This will be called when the windows is closed."""
 		self.close_app()
 		event.accept()
 
-
 class MainWidget(QWidget):
-	def __init__(self, parent=None):
+	def __init__(self, parent=None, verbose=False):
 		super(MainWidget, self).__init__()
 
 		self.parent = parent
-		# self.portions = ["Huge portion", "Big portion", "Medium portion", "Small portion", "Tiny portion", "No portion"]
+		self.verbose = verbose
 
-		self.meals = ["Breakfast", "Lunch", "Dinner", "Others"]
-		self.meals_colors = ["#e78f3d", "#33cea9", "#2279cd", "#d73b4f"]
+		self.MEALS = ["Breakfast", "Lunch", "Dinner", "Others"]
+		self.MEALS_COLORS = ["#e78f3d", "#33cea9", "#2279cd", "#d73b4f"]
 
-
-		self.foods = ["Vegetables", "Grains", "Fruits", "Protein", "Dairy", "Oils and fats", "Other"]
-		self.foods_colors = ["#99ca53", "#209fdf", "#6d5fd5", "#f6a625", "#e4e984", "#b5521a", "#e13131"]
-		self.ideal_line_color = "#43D052"
+		self.FOODS = ["Vegetables", "Grains", "Fruits", "Protein", "Dairy", "Oils and fats", "Other"]
+		self.FOODS_COLORS = ["#99ca53", "#209fdf", "#6d5fd5", "#f6a625", "#e4e984", "#b5521a", "#e13131"]
+		
+		self.IDEAL_LINE_COLOR = "#43D052"
 
 		self.widgets = {
 			"create_user_button": [], 
@@ -173,59 +217,99 @@ class MainWidget(QWidget):
 			}, 
 			"stats_splitter": [], 
 			"advices_tab": [], 
+			"calories_per_day_tab": [], 
 		}
 
-		self.advices_list = ("You need to eat more {}.", "You are eating extra {}.", "You are eating the perfect rate of {}.")
-		self.advices_values = (lambda: self.get_advices("low"), lambda: self.get_advices("extra"), lambda: self.get_advices("perfect"))
+		self.HEALTH_ADVICES = (
+			"Limit sugary drinks, such as: sodas, fruit juices, sweetened teas, etc. Some alternatives are water, coffee, unsweetened teas, etc.", 
+			"Eat more nuts and seeds, even if you have heard they are high in fats they are really nutritious.", 
+			"Avoid eating ultra-processed foods, such as: fast food, frozen meals, chips, etc.", 
+			"The fish is great source of calories and healthy fats, e.g.: the salmon.", 
+			"For almost everything you need to have a good quality sleep, it lets your brain rest and in general your whole body.", 
+			"Stay hydrated. Hydration helps ensure that your body is functioning optimally.", 
+			"Bright lights before sleep impoverishes your sleep quality.", 
+			"Go exercise. Physical activity is the best thing you can do to for mental and physical health, it makes your life better.", 
+			"Smoking, drinking (in excess) and drug's use kills your brain's neurons between others.", 
+			"Minimize your sugar intake in general, sugar is linked to obesity, type 2 diabetes and heart disease.", 
+			"Ocasionally is good to use a nutrition tracker, like this, to get an idea of your diet.")
 
+		self.HEALTH_ADVICES_TO_DISPLAY = 3 # The number of health advices to display
+
+		# This advices will be formated with it's corresponding ADVICE_VALUE in self.USER_ADVICES_VALUES
+		self.USER_ADVICES = ("You need to eat <span style='color: #A21B97;'>more</span> {}.", 
+			"Slow down. You are eating <span style='color: #BB2A19;'>extra</span> {}.", 
+			"Keep it up. You are having the <span style='color: #4BCA25;'>perfect</span> rate of {}.")
+		
+		# Functions to format self.USER_ADVICES
+		self.USER_ADVICES_VALUES = (lambda: self.get_advices("low"), lambda: self.get_advices("extra"), lambda: self.get_advices("perfect"))
+
+		assert len(self.USER_ADVICES) == len(self.USER_ADVICES_VALUES), f"self.USER_ADVICES length is not the same as self.USER_ADVICES_VALUES length. ({self})"
+
+		self.USER_VARIABLES = ("weight", "age", "height", "BMR")
+		
+		self.STATEMENTS = ("Variable", "Number", "Operator")
+		self.STATEMENT_TYPES = (StatementTypes.VARIABLE, StatementTypes.NUMBER, StatementTypes.OPERATOR)
+		self.STATEMENT_TO_TYPE = {statement:statement_type for statement, statement_type in zip(self.STATEMENTS, self.STATEMENT_TYPES)}
+		self.TYPE_TO_STATEMENT = {val:key for key, val in self.STATEMENT_TO_TYPE.items()}
+
+		self.load_assets()
 		self.init_prefs()
-		self.create_window()
+		self.init_window()
 
 	@property
-	def today(self):
+	def today(self) -> str:
 		return datetime.datetime.now().strftime('%Y-%m-%d')
 
 	@property
-	def current_user(self):
+	def current_user(self) -> str:
 		return self.prefs.file["current_user"]
 
 	@property
-	def gender(self):
-		return self.prefs.file["users"][self.current_user]["gender"]
+	def sex(self) -> str:
+		return self.prefs.file["users"][self.current_user]["sex"]
 
 	@property
-	def age(self):
+	def age(self) -> int:
 		return self.prefs.file["users"][self.current_user]["age"]
 
 	@property
-	def weight(self):
+	def weight(self) -> int:
 		return self.prefs.file["users"][self.current_user]["weight"]
 
 	@property
-	def height(self):
+	def height(self) -> int:
 		return self.prefs.file["users"][self.current_user]["height"]
 
 	@property
-	def activity(self):
+	def activity(self) -> str:
 		return self.prefs.file["users"][self.current_user]["activity"]
 
 	@property
-	def BMR(self):
+	def BMR(self) -> float:
 		return self.prefs.file["users"][self.current_user]["BMR"]
 
 	@property
-	def user_nutrition(self):
+	def user_nutrition(self) -> dict:
 		if not "nutrition" in self.prefs.file["users"][self.current_user]:
-			self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{to_snake_case(meal):{"total": 0, **{to_snake_case(food):0 for food in self.foods}} for meal in self.meals}})
+			self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
+		else:
+			if not self.today in self.prefs.file["users"][self.current_user]["nutrition"]:
+				self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
 
 		return self.prefs.file["users"][self.current_user]["nutrition"]
 
-
 	@property
-	def nutrition_info(self):
+	def nutrition_info(self) -> dict:
 		return self.prefs.file["nutrition"]
 
-	def init_prefs(self):	
+	def load_assets(self):
+		QFontDatabase.addApplicationFont(':/Fonts/Alatsi regular.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-BI.ttf')
+
+	def init_prefs(self) -> None:
+		"""This function inits the PREFS class to manage preferences."""
+		
+		# Default prefs
 		prefs = {
 			"current_user": "", 
 			"state": {
@@ -239,13 +323,10 @@ class MainWidget(QWidget):
 				}, 
 				"meal_tabs_splitters": 
 				{
-					e:[528, 530] for e in range(len(self.meals))
+					e:[528, 530] for e in range(len(self.MEALS))
 				}, 
 				"stats_splitter": [200, 200], 
 				"calories_per_day_comobox_checked": 0, 
-
-			}, 
-			"tabs": {
 				"selected_tab": 0, 
 				"selected_meal_tab": 0, 
 			}, 
@@ -253,67 +334,80 @@ class MainWidget(QWidget):
 			"users": {}, 
 		}
 		
-		self.prefs = PREFS.PREFS(prefs, filename="Prefs/settings")
+		self.prefs = PREFS.PREFS(prefs, filename="Prefs/settings") # Create instance
+		# self.prefs.write_prefs("nutrition", PREFS.read_prefs_file("Prefs/nutrition")) # Overwrite "nutrition" key reading Prefs/nutrition.prefs file
 
-		if self.current_user == "": return
-
-	def create_window(self):
-		##### Creating window
-		self.app = QApplication(sys.argv)
-
-		# Setting grid
+	def init_window(self) -> None:
+		"""This function will define the layout and call self.main_frame to create the main frame."""
+		# Define grid
 		self.setLayout(QGridLayout())
 
 		# FONTS
 		# QFontDatabase.addApplicationFont(':/impact.ttf')
 
-		# First frame
+		# Create frame
 		self.main_frame()
 
-	def update_calories(self):
-		calories = self.prefs.file["users"][self.current_user]["nutrition"][self.today]["total"] 
+	def update_calories_label(self) -> None:
+		"""This function will subrtact the current calories with the daily ideal ones, 
+		and display a message in the calories label.
+		"""
 
-		if calories + 30 < self.BMR:
+		# Get current calories
+		calories = self.prefs.file["users"][self.current_user]["nutrition"][self.today]["total"]
+
+		# BMR stands for Basal Metabolic Rate (daily calories)
+		if calories + 50 < self.BMR:
 			message = "You have {} calories left."
-		elif calories - 30 > self.BMR:
+		elif calories - 50 > self.BMR:
 			message = "You are {} calories <strong>over</strong> the daily rate."
 		else:
 			message = "You have ate the perfect rate of calories."
 
 		calories_left = round(self.BMR - calories, 3)
 
+		# Update calories_label text
 		self.widgets["calories_label"][-1].setText(message.format(abs(calories_left)))
 
-	def update_splitters(self):
+	def update_splitters_sizes(self) -> None:
+		"""Update the splitters size with the stored in the prefs file."""
+
+		# Set the sizes of the stats_splitter
 		self.widgets["stats_splitter"][-1].setSizes(self.prefs.file["state"]["stats_splitter"])
 		
+		# Iterate trough meal tabs and set splitter sizes
 		for e, meal_tab in enumerate(self.widgets["meal_tabs"]):
 			meal_tab.widget(0).setSizes(self.prefs.file["state"]["meal_tabs_splitters"][str(e)])
 
-	def update(self):
-		if not self.update_tabs(): # update_tabs returns False means that there is no 'current_user' so all stats should be cleaned.
-			return False
+	def update(self, index: int=None) -> None:
+		"""Update the selected tab."""
+		if index is None: # If no index is given get it from the prefs file
+			index = self.prefs.file["state"]["selected_tab"]
 
-		self.update_current_user_label()
-		self.update_bar_chart()
+		if self.current_user == "": # If no current_user means there are no users
+			self.clear_user_widgets() # Clear widgets
+			self.create_add_user_button() # Create add user button
+			return # And retturn
+
+		self.update_tabs()
 		self.update_pie_chart()
+		self.update_splitters_sizes()
+
+		self.update_calories_per_day_tab()
+		self.animate_charts()
+	
 		self.update_advices_tab()
-		self.update_splitters()
+	
+		self.update_current_user_label()		
 
 	def update_tabs(self):
-		if self.current_user == "":
-			self.clear_user_widgets()
-			self.create_add_user_button()
-			return False
-
 		if len((create_user_button := self.widgets["create_user_button"])) > 0:
 			create_user_button[-1].setParent(None)
 			create_user_button = []
 			self.create_stats()
-			return
 			
 		# Update calories lable with the new user daily calories
-		self.update_calories()
+		self.update_calories_label()
 	
 		self.widgets["stats_splitter"][-1].widget(1).setParent(None)
 		self.widgets["meal_tabs"] = []
@@ -321,8 +415,6 @@ class MainWidget(QWidget):
 		meal_tabs = self.create_meal_tabs()
 
 		self.widgets["stats_splitter"][-1].addWidget(meal_tabs)
-
-		return True
 
 	def clear_user_widgets(self):
 		if len((tabs := self.widgets["tabs"])) > 0:
@@ -351,22 +443,22 @@ class MainWidget(QWidget):
 		if accepted_rejected == True:
 			self.widgets["create_user_button"][-1].setParent(None)
 			self.widgets["create_user_button"] = []
-			self.create_tabs()
+			self.create_widgets()
 
 	def get_meals_totals_by_date(self):
-		result = [[] for i in self.meals]
+		result = [[] for i in self.MEALS]
 
 		for date_count, (date, date_info) in enumerate(self.user_nutrition.items()):
 			for meal, food in date_info.items():
-				if meal == "total": # That meal total is equal to the sum of all meals
+				if meal == "total": # That meal total is equal to the sum of all MEALS
 					continue
 
-				result[self.meals.index(snake_case_to_text(meal))].append(food["total"]) # This food total is the sum of only one meal
+				result[self.MEALS.index(snake_case_to_sentence_case(meal))].append(food["total"]) # This food total is the sum of only one meal
 
 		return result
 
 	def get_foods_totals(self, date: str=None):
-		"""Sum all foods total from every food (in a certain date).
+		"""Sum all FOODS total from every food (in a certain date).
 		
 		Args:
 			date (str, optional=self.today): A date to search in (2021-08-22, 2021-08-23, 2021-08-24)
@@ -374,7 +466,7 @@ class MainWidget(QWidget):
 		if date is None:
 			date = self.today
 
-		result = {food:0 for food in self.foods}
+		result = defaultdict(lambda: 0)
 
 		for meal, meal_info in self.user_nutrition[date].items():
 			if meal == "total": continue
@@ -382,12 +474,12 @@ class MainWidget(QWidget):
 			for food, food_val in meal_info.items():
 				if food == "total": continue
 
-				result[snake_case_to_text(food)] += food_val
+				result[snake_case_to_sentence_case(food)] += food_val
 
 		return result
 
 	def get_foods_totals_by_date(self):
-		result = [[] for i in self.foods]
+		result = [[] for i in self.FOODS]
 
 		for date_count, date in enumerate(self.get_dates()):
 			for e, (food, food_total) in enumerate(self.get_foods_totals(date=date).items()):
@@ -398,9 +490,9 @@ class MainWidget(QWidget):
 	def get_foods_by_meal(self, meal):
 		result = {}
 
-		for food, portion_value in self.user_nutrition[self.today][to_snake_case(meal)].items():
+		for food, portion_value in self.user_nutrition[self.today][casestyle.snakecase(meal)].items():
 
-			if food == "total":	continue # this meal total is equal to the sum of all meals (breakfast, lunch, etc)
+			if food == "total":	continue # this meal total is equal to the sum of all MEALS (breakfast, lunch, etc)
 			
 			result[food] = portion_value
 
@@ -426,7 +518,7 @@ class MainWidget(QWidget):
 		result = {}
 
 		age = self.age
-		gender = self.gender
+		sex = self.sex
 		weight = self.weight
 		height = self.height
 		activity = self.height
@@ -449,14 +541,14 @@ class MainWidget(QWidget):
 		for food, food_ideal_portion in data.items():
 			result += eval(self.nutrition_info["portion_max"].format(food_ideal_portion))
 
-		return result * len(self.meals) if sum_all_meals else result
+		return result * len(self.MEALS) if sum_all_meals else result
 
 	def calculate_meal_total(self):
 		meals_total_keys = []
 		meals_total_values = []
 
 		for meal, food_info in self.user_nutrition[self.today].items():
-			if meal == "total":	continue # this meal total is equal to the sum of all meals (breakfast, lunch, etc)
+			if meal == "total":	continue # this meal total is equal to the sum of all MEALS (breakfast, lunch, etc)
 
 			meal_total = 0
 			for food_total in self.get_foods_by_meal(meal).values():
@@ -473,37 +565,31 @@ class MainWidget(QWidget):
 		day_total = 0
 
 		for meal, food_info in self.user_nutrition[self.today].items():
-			if meal == "total":	continue # this meal total is equal to the sum of all meals (breakfast, lunch, etc)
+			if meal == "total":	continue # this meal total is equal to the sum of all MEALS (breakfast, lunch, etc)
 
 			day_total += food_info["total"]
 
 		self.prefs.write_prefs(f'users/{self.current_user}/nutrition/{self.today}/total', day_total)
 
 	def create_meal_tabs(self):
-		def on_slider_changed(value, meal, food, slider):			
-			nonlocal sleep_time
-
-			sleep_time = time.time() - sleep_time
-
-			self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}/{to_snake_case(meal)}/{to_snake_case(food)}", value)
+		def on_slider_changed(value, meal, food, slider):
+			self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}/{casestyle.snakecase(meal)}/{casestyle.snakecase(food)}", value)
 			
 			# slider_pos = slider.mapToGlobal(QPoint(0, 0))
 
 			self.calculate_meal_total()
 			self.calculate_day_total()
 			
-			self.update_calories()
+			self.update_calories_label()
 
 			self.update_pie_chart()
 			update_meal_chart(meal)
-
-			sleep_time = time.time()
-		
+	
 		def create_bar_series():
 			series =  QHorizontalStackedBarSeries()
 
-			for color, (food, food_value) in zip(self.foods_colors, self.get_foods_by_meal(meal).items()):
-				food_set = QBarSet(snake_case_to_text(food))
+			for color, (food, food_value) in zip(self.FOODS_COLORS, self.get_foods_by_meal(meal).items()):
+				food_set = QBarSet(snake_case_to_sentence_case(food))
 				food_set.setColor(QColor(color))
 
 				food_set << food_value
@@ -513,6 +599,8 @@ class MainWidget(QWidget):
 			return series
 
 		def create_meal_chart(meal):
+			if self.verbose: print(f"Create {meal} chart in meal tabs")
+	
 			bar_series = create_bar_series()
 
 			line_series = QLineSeries()
@@ -520,10 +608,10 @@ class MainWidget(QWidget):
 
 			line_series_pen = line_series.pen()
 			line_series_pen.setWidth(2)
-			line_series_pen.setColor(QColor(self.ideal_line_color))
+			line_series_pen.setColor(QColor(self.IDEAL_LINE_COLOR))
 			line_series.setPen(line_series_pen)
 
-			ideal_line_value = self.get_ideal_meal_portions()[to_snake_case(meal)]
+			ideal_line_value = self.get_ideal_meal_portions()[casestyle.snakecase(meal)]
 
 			line_series.append(QPoint(int(ideal_line_value), -10))
 			line_series.append(QPoint(int(ideal_line_value), 10))
@@ -536,18 +624,13 @@ class MainWidget(QWidget):
 			chart.setTitle(f"Calories by food ({meal})")
 			chart.setAnimationOptions(QChart.SeriesAnimations)
 
-			axis = QBarCategoryAxis()
-			#axis.setTitleText("Date")
-			#axis.append([f"<strong>{meal}</strong>"])
-
 			axisY = QBarCategoryAxis()
-			axisY.append([f"<strong>{meal}</strong>"])
-			
+			axisY.setTitleText(meal)
+			axisY.setLabelsVisible(False)
+
 			chart.addAxis(axisY, Qt.AlignLeft)
 			line_series.attachAxis(axisY)
 			bar_series.attachAxis(axisY)
-
-			#axisY.setRange(dates[0], dates[-1])
 
 			axisX = QValueAxis()
 			axisX.setTitleText("Calories")
@@ -566,16 +649,28 @@ class MainWidget(QWidget):
 			return chart_view, bar_series
 
 		def update_meal_chart(meal):
+			if self.verbose: print(f"Update {meal} chart in meal tabs")
+
 			series = meal_charts_series[meal]
 			series.clear()
 
-			for color, (food, food_value) in zip(self.foods_colors, self.get_foods_by_meal(meal).items()):
-				food_set = QBarSet(snake_case_to_text(food))
+			for color, (food, food_value) in zip(self.FOODS_COLORS, self.get_foods_by_meal(meal).items()):
+				food_set = QBarSet(snake_case_to_sentence_case(food))
 				food_set.setColor(QColor(color))
 
 				food_set << food_value
 
 				series.append(food_set)
+
+		def animate_splitter(index):
+			splitter = meal_tabs_splitters[index]
+			sizes = splitter.sizes()
+			
+			sizes[1] += 10
+			splitter.setSizes(sizes)
+
+			sizes[1] -= 10
+			splitter.setSizes(sizes)
 
 		def on_tab_change(index):
 			nonlocal first_time
@@ -584,15 +679,15 @@ class MainWidget(QWidget):
 				first_time = False
 				return
 			
-			self.prefs.write_prefs("tabs/selected_meal_tab", index)
-			#self.animate_charts()
-			#update_meal_chart(meal)
+			self.prefs.write_prefs("state/selected_meal_tab", index)
+			animate_splitter(index)
 
 		def on_splitter_moved(pos, _, index):
 			self.prefs.write_prefs(f"state/meal_tabs_splitters/{index}", meal_tabs_splitters[index].sizes())
 
+		if self.verbose: print(f"Create meal tabs")
+
 		first_time = True
-		sleep_time = time.time() 
 
 		meal_tabs = VerticalTabWidget()
 		meal_tabs.currentChanged.connect(on_tab_change)
@@ -600,14 +695,14 @@ class MainWidget(QWidget):
 		meal_charts_series = {}
 		meal_tabs_splitters = []
 
-		for e, meal in enumerate(self.meals): # Breakfast, lunch, dinner and extra
+		for e, meal in enumerate(self.MEALS): # Breakfast, lunch, dinner and extra
 			meal_tab = QSplitter(Qt.Horizontal)
 			meal_tab.splitterMoved.connect(lambda pos, _, splitter_index=e: on_splitter_moved(pos, _, splitter_index))
 			
 			meal_tab_sliders = QWidget()
 			meal_tab_sliders.setLayout(QFormLayout())
 
-			for food, food_ideal_portion in zip(self.foods, self.get_ideal_portions().values()): # Vegetables, whole grains, fruits, etc
+			for food, food_ideal_portion in zip(self.FOODS, self.get_ideal_portions().values()): # Vegetables, whole grains, fruits, etc
 				slider = QSlider(Qt.Horizontal)
 				slider.setFocusPolicy(Qt.StrongFocus)
 				slider.setTickPosition(QSlider.NoTicks)
@@ -620,7 +715,7 @@ class MainWidget(QWidget):
 				slider.setPageStep(int(slider_max // 5))
 				slider.setSingleStep(int(slider_max // 5))
 
-				slider_value = self.user_nutrition[self.today][to_snake_case(meal)][to_snake_case(food)]
+				slider_value = self.user_nutrition[self.today][casestyle.snakecase(meal)][casestyle.snakecase(food)]
 				
 				slider.setValue(slider_value)
 				slider.valueChanged.connect(lambda value, meal=meal, food=food, slider=slider: on_slider_changed(value, meal, food, slider))
@@ -638,10 +733,10 @@ class MainWidget(QWidget):
 
 			meal_tabs.addTab(meal_tab, meal)
 
-		meal_tabs.setCurrentIndex(self.prefs.file["tabs"]["selected_meal_tab"])
+		meal_tabs.setCurrentIndex(self.prefs.file["state"]["selected_meal_tab"])
 
-		self.update_calories()
-		self.update_bar_chart()
+		self.update_calories_label()
+		#self.update_bar_chart()
 		self.update_pie_chart()
 
 		self.widgets["meal_tabs"].append(meal_tabs)
@@ -654,7 +749,6 @@ class MainWidget(QWidget):
 		food_list = []
 
 		for (food, food_value), ideal_food_value in zip(food_data.items(), ideal_food_data.values()):
-			#print(food, food_value, ideal_food_value)
 
 			if kind == "low":
 				food_difference = ideal_food_value - food_value 
@@ -663,7 +757,7 @@ class MainWidget(QWidget):
 			elif kind == "perfect":
 				food_difference = abs(food_value - ideal_food_value)
 
-			condition = food_difference > 10 if kind != "perfect" else food_difference < 10
+			condition = food_difference > 30 if kind != "perfect" else food_difference < 30
 			if condition:
 				food_list.append(food)
 
@@ -681,62 +775,76 @@ class MainWidget(QWidget):
 			else:
 				result += f"{food}, "
 
-		return snake_case_to_text(result)
+		return snake_case_to_sentence_case(result).lower()
 
 	def update_advices_tab(self):
-		advices_list = self.advices_list
-		advices_values = self.advices_values
+		"""This function will update the created labels on self.create_advices_tab
+		"""
+		if self.verbose: print("Update advices tab")
+		
 		advices_tab_layout = self.widgets["advices_tab"][-1].layout()
 
-		advices_labels_list = [advices_tab_layout.itemAt(indx).widget() for indx in range(advices_tab_layout.count())]
+		advices_labels = list(get_widgets_from_layout(advices_tab_layout, widget_type=QLabel)) # User advice labels (depend on the user)
+		
+		health_advices_layout = get_widget_from_layout(advices_tab_layout, 0, QScrollArea).widget().layout()
+		health_advices_labels = get_widgets_from_layout(health_advices_layout, widget_type=QLabel) # The list of QLabel widgets
+		health_advices_list = choose_random_from_list(self.HEALTH_ADVICES, 3) # Health advice labels which means advices from self.HEALTH_ADVICES (not depend on the user)
 
-		## Update widgets ##
-		not_empty_count = 0
-		for advice, advice_value, advice_label in zip(advices_list, advices_values, advices_labels_list):
-			advice_value = advice_value()
+		## Update health advices labels ##
+		for advice_label, advice in zip(health_advices_labels, health_advices_list):						
+			advice_label.setText(advice) # Choose a random advice from health_adivces
 
-			if not advice_value:
-				advice_label.setText("")
-			else:
-				advice_label.setText(advice.format(advice_value))
-				not_empty_count += 1
 
-		if not_empty_count == 0: # Means all labels are emtpy
-			advices_tab_layout.itemAt(0).setText("It seems there are no advices to give you yet.")
-			#self.widgets["advices_labels_list"][0].setAlignment(Qt.AlignTop)
-			#self.widgets["advices_labels_list"][0].setStyleSheet("font-weight: bold; font-size: 16px;")
+		## Update user advices labels ##
+		empty = True
+		for advice, advice_value, advice_label in zip(self.USER_ADVICES, self.USER_ADVICES_VALUES, advices_labels):
+			advice_value = advice_value() # Call advice_value to get the value depending on the user
+
+			if not advice_value: # If value is false means there is no advice of this kind
+				advice_label.setVisible(False) # Then hide it
+				continue # And try the next label
+			
+			advice_label.setVisible(True) # Otherwise show it
+			advice_label.setText(advice.format(advice_value)) # Set the text to the value
+			
+			if empty: empty = False # Set it to false because there are advices to display
+
+		if empty: # Means all labels are emtpy
+			advices_labels[0].setVisible(True)
+			advices_labels[0].setText("It seems there are no advices to give you yet.")		
 
 	def create_advices_tab(self):
+		"""This function creates all the needed lables to display advices, it just creates them, not the content (the labels are filled in self.update_advices_tab)
+
+		"""
 		## Create QWidget to contain all advices tab. ##
 		advices_tab = QWidget()
-		advices_tab.setLayout(QFormLayout())
-
-		advices_list = self.advices_list
-		advices_values = self.advices_values
+		advices_tab.setLayout(QVBoxLayout())
 
 		## Create widgets ##
-		not_empty_count = 0
-		for advice, advice_value in zip(advices_list, advices_values):
-			advice_value = advice_value()
-			advice_label = QLabel()
-			advice_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #3A3A3A;")
-
-			if not advice_value:
-				advice_label.setText("")
-			else:
-				advice_label.setText(advice.format(advice_value))
-				not_empty_count += 1
-
-			#advice_label.setStyleSheet("padding: 0px 0px 0px 0px;")
+		for _ in self.USER_ADVICES: # This loop will create advices related with the user
+			advice_label = QLabel()				
+			advice_label.setStyleSheet("font-weight: bold; font-size: 19px; color: #3A3A3A; font-family: Ubuntu;")
 
 			# Position widgets into advices_tab layout
-			advices_tab.layout().addRow(advice_label)
+			advices_tab.layout().addWidget(advice_label)
+			
+		advices_tab.layout().addSpacing(10) # spacing	
 
-			## Add widgets to self.widgets dictionary ##
+		health_advices_area = QWidget()
+		health_advices_area.setLayout(QFormLayout())
 
-		if not_empty_count == 0: # Means all labels are emtpy
-			advices_tab.layout().itemAt(0).setText("It seems there are no advices to give you yet.")
+		health_advices_scroll = ScrollArea(health_advices_area)
 
+		for _ in range(self.HEALTH_ADVICES_TO_DISPLAY): # This loop will create health advices (not related with the user)
+			advice_label = QLabel()
+			advice_label.setStyleSheet("border: none; font-weight: bold; font-size: 18px; color: #4e342e; margin-top: 5px; padding: 2px 2px 2px 2px; font-family: Ubuntu;")#" background-color: #B9B9B9;")
+			advice_label.setAlignment(Qt.AlignLeft)
+
+			# Position widgets into advices_tab layout
+			health_advices_area.layout().addWidget(advice_label)
+			
+		advices_tab.layout().addWidget(health_advices_scroll)
 		self.widgets["advices_tab"].append(advices_tab)		
 		return advices_tab
 
@@ -746,7 +854,7 @@ class MainWidget(QWidget):
 		Return:
 			dict: {"vegetables": 124, "grains": 94, ...}
 		"""
-		result = {}
+		result = defaultdict(lambda: 0)
 
 		for meal, meal_data in self.user_nutrition[self.today].items():
 			if meal == "total":
@@ -756,14 +864,13 @@ class MainWidget(QWidget):
 				if food == "total":
 					continue
 
-				if not food in result:
-					result[food] = 0
-
 				result[food] += portion_value
 
-		return result		
+		return result	
 
 	def update_pie_chart(self):
+		if self.verbose: print("Update pie chart")
+
 		chart = self.widgets["charts"]["pie"][-1]
 
 		series = self.widgets["charts_series"]["pie"][-1]
@@ -772,7 +879,7 @@ class MainWidget(QWidget):
 		self.create_slices_pie(series)
 
 	def create_slices_pie(self, series):
-		for color, (food, food_total) in zip(self.foods_colors, self.get_all_foods_totals_today().items()):
+		for color, (food, food_total) in zip(self.FOODS_COLORS, self.get_all_foods_totals_today().items()):
 			_slice = series.append(food.replace("_", " ").capitalize(), food_total)
 			_slice.setBrush(QColor(color))
 			if food_total > 0: _slice.setLabelVisible() # Otherwise there will be a lot of labels over
@@ -780,6 +887,8 @@ class MainWidget(QWidget):
 		return series
 
 	def create_pie_chart(self):
+		if self.verbose: print("Create pie chart")
+
 		series = QPieSeries()
 
 		self.create_slices_pie(series)
@@ -800,15 +909,17 @@ class MainWidget(QWidget):
 
 	def create_calories_label(self):
 		calories_label = QLabel()
-		calories_label.setStyleSheet("font-size: 30px;")
-		calories_label.setAlignment(QtCore.Qt.AlignCenter)
+		calories_label.setStyleSheet("font-size: 30px; font-family: Alatsi;")
+		calories_label.setAlignment(Qt.AlignCenter)
 
 		self.widgets["calories_label"].append(calories_label)
-		self.update_calories()
+		self.update_calories_label()
 
 		return calories_label
 
 	def update_bar_chart(self):
+		if self.verbose: print("Update bar chart")
+	
 		chart = self.widgets["charts"]["bar"][-1]
 
 		series = self.widgets["charts_series"]["bar"][-1]
@@ -840,15 +951,15 @@ class MainWidget(QWidget):
 			if not point:
 				return
 					
-		## Use meals data if calories_per_day_comobox_checked else use foods data ##
+		## Use MEALS data if calories_per_day_comobox_checked else use FOODS data ##
 		if self.prefs.file["state"]["calories_per_day_comobox_checked"] == 0:
 			data = self.get_meals_totals_by_date() # Data
-			colors = self.meals_colors # Colors
-			names_list = self.meals # A list for the bar set names
+			colors = self.MEALS_COLORS # Colors
+			names_list = self.MEALS # A list for the bar set names
 		elif self.prefs.file["state"]["calories_per_day_comobox_checked"] == 1:
 			data = self.get_foods_totals_by_date() # Data
-			colors = self.foods_colors # Colors
-			names_list = self.foods # A list for the bar set names
+			colors = self.FOODS_COLORS # Colors
+			names_list = self.FOODS # A list for the bar set names
 
 		for e, (color, values_list) in enumerate(zip(colors, data)):
 			_set = QBarSet(names_list[e])
@@ -875,11 +986,11 @@ class MainWidget(QWidget):
 
 		line_series_pen = line_series.pen()
 		line_series_pen.setWidth(2)
-		line_series_pen.setColor(QColor(self.ideal_line_color))
+		line_series_pen.setColor(QColor(self.IDEAL_LINE_COLOR))
 		line_series.setPen(line_series_pen)
 
-		line_series.append(QPoint(-1, int(self.BMR)))
-		line_series.append(QPoint(10, int(self.BMR)))
+		line_series.append(QPoint(-100, int(self.BMR)))
+		line_series.append(QPoint(100, int(self.BMR)))
 
 		## Add series to chart ##
 		chart.addSeries(bar_series)
@@ -890,9 +1001,7 @@ class MainWidget(QWidget):
 		axisX = QBarCategoryAxis()
 		axisX.setTitleText("Date")
 		axisX.append(dates)
-		
-		#chart.createDefaultAxes()
-		
+				
 		chart.addAxis(axisX, Qt.AlignBottom)
 		
 		line_series.attachAxis(axisX)
@@ -901,6 +1010,7 @@ class MainWidget(QWidget):
 		axisX.setRange(dates[0], dates[-1])
 
 		axisY = QValueAxis()
+		axisY.setTitleText("Calories")
 		chart.addAxis(axisY, Qt.AlignLeft)
 		line_series.attachAxis(axisY)
 		bar_series.attachAxis(axisY)
@@ -927,54 +1037,78 @@ class MainWidget(QWidget):
 		self.window().resize(main_window_width, main_window_height + 1)
 		self.window().resize(main_window_width, main_window_height)
 
-	def create_calories_per_day_tab(self):
+	def update_calories_per_day_tab(self):
+		if self.verbose: print("Create calories per day tab")
+	
+		"""This function removes the comboboxes that changes the way calories per day chart is displayed (the two options are "by MEALS" or "by FOODS").
+			I do this because otherwise the combobxes just stop working. 
+		"""
+		comboboxes = self.widgets["calories_per_day_tab"][-1].layout().itemAt(0).widget()
+
+		self.widgets["calories_per_day_tab"][-1].layout().removeWidget(comboboxes)
+		comboboxes.setParent(None)
+		self.widgets["calories_per_day_tab"][-1].layout().insertWidget(0, self.create_bar_chart_comboboxes())
+
+		self.update_bar_chart()
+
+	def create_bar_chart_comboboxes(self):
+		"""This function creates two comboboxes to change the way calories per day chart is displayed (by MEALS or by foos)
+		"""
 		def on_combobox_change():
 			index = comboboxes_group.checkedId()
 			index = abs(index) - 2 # if index 0 id is -2, that's why i subtract two from index
 			
-			print(index)
-
 			self.prefs.write_prefs("state/calories_per_day_comobox_checked", index)
-
 			self.update_bar_chart()
 
-		## calories_per_day_tab Widget ##
-		calories_per_day_tab = QWidget()
-		calories_per_day_tab.setLayout(QVBoxLayout())
-
-		## By meals, by food comboboxes ##
-		comboboxes_widget = QWidget()
-		comboboxes_widget.setLayout(QVBoxLayout())
+		bar_chart_comboboxes = QWidget()
+		bar_chart_comboboxes.setLayout(QVBoxLayout())
 
 		comboboxes_group = QButtonGroup()
-		comboboxes_group.idToggled.connect(on_combobox_change)
 		comboboxes_group.setExclusive(True)
+		comboboxes_group.idToggled.connect(on_combobox_change)
 
 		by_meals_radiobutton = QRadioButton("By meals")
 		by_food_radiobutton = QRadioButton("By foods")
 		by_food_radiobutton.setStyleSheet("margin: 0px 0px 0px 0px;")
 
-		comboboxes_widget.layout().addWidget(by_meals_radiobutton)	
-		comboboxes_widget.layout().addWidget(by_food_radiobutton)
-
 		if (calories_per_day_comobox_checked := self.prefs.file["state"]["calories_per_day_comobox_checked"]) == 0:
 			by_meals_radiobutton.setChecked(True)
-			#by_meals_radiobutton.setChecked(True)
 		elif calories_per_day_comobox_checked == 1:
 			by_food_radiobutton.setChecked(True)
-			#by_meals_radiobutton.setChecked(True)
 
 		comboboxes_group.addButton(by_meals_radiobutton)
 		comboboxes_group.addButton(by_food_radiobutton)
+
+		bar_chart_comboboxes.layout().addWidget(by_meals_radiobutton)	
+		bar_chart_comboboxes.layout().addWidget(by_food_radiobutton)
+
+		return bar_chart_comboboxes
+
+	def create_calories_per_day_tab(self):
+		if self.verbose: print("Create calories per day tab")
+
+		## calories_per_day_tab Widget ##
+		calories_per_day_tab = QWidget()
+		calories_per_day_tab.setLayout(QVBoxLayout())
 
 		## Bar chart ##
 		bar_chart = self.create_bar_chart() 
 
 		## Position widgets on calories_per_day_tab ##
-		calories_per_day_tab.layout().addWidget(comboboxes_widget)
+		calories_per_day_tab.layout().addWidget(self.create_bar_chart_comboboxes())
 		calories_per_day_tab.layout().addWidget(bar_chart)
 
+		self.widgets["calories_per_day_tab"].append(calories_per_day_tab)
+
 		return calories_per_day_tab
+
+	def create_widgets(self):
+		"""Create all widgets."""
+		self.create_current_user_label()	
+		self.create_tabs()
+
+		self.update()
 
 	def create_tabs(self):
 		def on_tab_change(index):
@@ -984,20 +1118,28 @@ class MainWidget(QWidget):
 				first_time = False
 				return
 
-			self.prefs.write_prefs("tabs/selected_tab", index)
+			self.prefs.write_prefs("state/selected_tab", index)
+
 			if index == 1:
-				self.update_bar_chart()
-				self.animate_charts()
-			elif index == 2:
+				self.update_calories_per_day_tab()
+			if index == 2:
 				self.update_advices_tab()
+
+			self.animate_charts()
 	
 		def on_splitter_moved(pos, index):
 			self.prefs.write_prefs(f"state/stats_splitter", stats_splitter.sizes())
+
+		def next_tab():
+			tabs.setCurrentIndex((tabs.currentIndex() + 1) % tabs.count())
 
 		first_time = True
 
 		tabs = QTabWidget()
 		tabs.currentChanged.connect(on_tab_change)
+
+		tabs_shortcut = QShortcut(QKeySequence("Ctrl+Tab"), tabs)
+		tabs_shortcut.activated.connect(next_tab)
 
 		## Splitter ##
 		stats_splitter = QSplitter(Qt.Vertical)
@@ -1035,7 +1177,7 @@ class MainWidget(QWidget):
 		tabs.addTab(calories_per_day_tab, "Calories per day")
 		tabs.addTab(advices_tab, "Advices")		
 
-		tabs.setCurrentIndex(self.prefs.file["tabs"]["selected_tab"])
+		tabs.setCurrentIndex(self.prefs.file["state"]["selected_tab"])
 
 		## Position tabs in main widget ##
 		self.layout().addWidget(tabs, 2, 0, 1, 0)
@@ -1047,7 +1189,7 @@ class MainWidget(QWidget):
 	def create_current_user_label(self):
 		current_user_label = QLabel(self.current_user)
 		current_user_label.setStyleSheet("font-size: 30px; margin-right: 10px;")
-		current_user_label.setAlignment(QtCore.Qt.AlignRight)
+		current_user_label.setAlignment(Qt.AlignRight)
 
 		self.layout().addWidget(current_user_label, 1, 1)
 		self.widgets["current_user_label"].append(current_user_label)
@@ -1058,9 +1200,12 @@ class MainWidget(QWidget):
 		current_user_label.setText(self.current_user)
 
 	def main_frame(self):
-		logo = QLabel("<strong>Diet</strong>")
-		logo.setStyleSheet("font-size: 50px;")
-		logo.setAlignment(QtCore.Qt.AlignCenter)
+		logo = QLabel()
+		logo.setStyleSheet("margin-bottom: 10px;")
+		logo.setAlignment(Qt.AlignCenter)
+
+		pixmap = QPixmap("Images/logo.png")
+		logo.setPixmap(pixmap)
 
 		self.layout().addWidget(logo, 0, 0, 2, 0)
 
@@ -1068,20 +1213,11 @@ class MainWidget(QWidget):
 			self.create_add_user_button()
 			return
 
-		self.create_current_user_label()
-		self.create_tabs()
-
-	def create_warning(self, window, message: str, title: str):
-		warning = QMessageBox.question(window, 
-			title, 
-			message, 
-			QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
-				
-		return True if warning == QMessageBox.Yes else False
+		self.create_widgets()
 
 	def add_user_dialog(self, 
 		default_username="Tim", 
-		default_gender=None, 
+		default_sex='Male', 
 		default_weight=70, 
 		default_height=170, 
 		default_age=25, 
@@ -1090,18 +1226,24 @@ class MainWidget(QWidget):
 
 		def save_config():
 			if user_input.text() in self.prefs.file["users"] and not editing:
-				warning = self.create_warning(dialog,   
-					message="That username already exists, do you want to overwrite it?", 
-					title="Already existent username", 
-				)
+
+				warning = question_dialog(
+					"Already existent username", 
+					"That username already exists, do you want to overwrite it?", 
+					buttons=(
+						(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogYesButton), "Yes"), 1), 
+						(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogNoButton), "No"), 0), 
+						), 
+					icon=QMessageBox.Warning, 
+					parent=dialog)
 				
 				if not warning:
 					return
 		
 			username = user_input.text()
 
-			gender_id = abs(gender_group.checkedId()) - 2
-			gender = gender_list[gender_id]
+			sex_id = abs(sex_group.checkedId()) - 2
+			sex = sex_list[sex_id]
 			
 			age = age_spinbox.value()
 			weight = weight_spinbox.value()
@@ -1114,18 +1256,16 @@ class MainWidget(QWidget):
 
 			if self.current_user == "": self.prefs.write_prefs(f"current_user", username)
 			
-			self.prefs.write_prefs(f"users/{username}/gender", gender)
+			self.prefs.write_prefs(f"users/{username}/sex", sex)
 			self.prefs.write_prefs(f"users/{username}/age", age)
 			self.prefs.write_prefs(f"users/{username}/weight", weight)
 			self.prefs.write_prefs(f"users/{username}/height", height)
 			self.prefs.write_prefs(f"users/{username}/activity", activity)
 
-			if gender == "Male":
+			if sex == "Male":
 				BMR = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
-			elif gender == "Female":
+			elif sex == "Female":
 				BMR = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
-			elif gender == "Non-binary":
-				BMR = 267.9775 + (11.322 * weight) + (3.9485 * height) - (5.0035 * age)
 
 			if activity == "None":
 				BMR *= 1.2
@@ -1153,20 +1293,20 @@ class MainWidget(QWidget):
 		## User ##
 		user_input = QLineEdit(default_username)
 
-		## Gender RadioButtons ##
-		gender_list = ["Male", "Female", "Non-binary"]
-		gender_group = QButtonGroup()
-		gender_box = QHBoxLayout()
+		## Sex RadioButtons ##
+		sex_list = ["Male", "Female"]
+		sex_group = QButtonGroup()
+		sex_box = QHBoxLayout()
 		
-		for e, gender in enumerate(gender_list):
-			gender_radiobutton = QRadioButton(gender)
+		for e, sex in enumerate(sex_list):
+			sex_radio_button = QRadioButton(sex)
 
-			if not default_gender is None:
-				if gender == default_gender:
-					gender_radiobutton.setChecked(True)
+			if not default_sex is None:
+				if sex == default_sex:
+					sex_radio_button.setChecked(True)
 
-			gender_group.addButton(gender_radiobutton)
-			gender_box.addWidget(gender_radiobutton)
+			sex_group.addButton(sex_radio_button)
+			sex_box.addWidget(sex_radio_button)
 
 		## Weight and height ##
 		weight_spinbox = QSpinBox(suffix=" kg")
@@ -1202,7 +1342,7 @@ class MainWidget(QWidget):
 		#dialog.layout().addRow(label)
 
 		dialog.layout().addRow("Username: ", user_input)
-		dialog.layout().addRow("Gender: ", gender_box)
+		dialog.layout().addRow("Sex: ", sex_box)
 		dialog.layout().addRow("Weight: ", weight_spinbox)
 		dialog.layout().addRow("Height: ", height_spinbox)
 		dialog.layout().addRow("Age: ", age_spinbox)
@@ -1212,7 +1352,161 @@ class MainWidget(QWidget):
 
 		return dialog.exec_()
 
-	def settings_dialog(self, default_tab=0):
+	def create_ideal_portion_settings_tab(self):
+		def add_or_remove_dialog(food_layout: QLayout, food: str):
+			answer = question_dialog(
+				"Add or remove", 
+				"Add a statement at the end or remove the last statement.", 
+				parent=nutrition_tab, 				
+			)
+
+			if answer == 0: # Means cancel
+				return
+
+			elif answer == 1: # Means remove
+				if food_layout.count() <= 1:
+					QMessageBox.warning(nutrition_tab, "Nothing to remove", "There are no more statements to remove.")
+					return
+
+				last_widget = get_widget_from_layout(food_layout, -2) # -2 because -1 it's add_remove button itself
+				last_widget.setParent(None)
+
+				statement = split_expression(self.prefs.file["nutrition"]["ideal_portions"][food], include_type=False)
+
+				if check_syntax(self.prefs.file["nutrition"]["ideal_portions"][food]): 
+					self.prefs.write_prefs(f"nutrition/ideal_portions_cache/{food}", self.prefs.file["nutrition"]["ideal_portions"][food])
+
+				self.prefs.write_prefs(f"nutrition/ideal_portions/{food}", "".join(statement))
+
+			elif answer == 2: # Means add
+				statement, ok = get_item_input_dialog(self.STATEMENTS, "Choose an statement.", parent=nutrition_tab)
+				
+				if not ok:
+					return
+
+				statement_type = self.STATEMENT_TO_TYPE[statement]
+				
+				if statement_type == StatementTypes.NUMBER:
+					statement, statement_ok = get_double_input_dialog("Enter a value", parent=nutrition_tab)
+				
+				elif statement_type == StatementTypes.VARIABLE:
+					statement, statement_ok = get_item_input_dialog(self.USER_VARIABLES, "Choose a variable", parent=nutrition_tab)
+				
+				elif statement_type == StatementTypes.OPERATOR:
+					statement, statement_ok = get_item_input_dialog(GOODLOOKING_OPERATORS, "Choose an operator", parent=nutrition_tab)
+				else:
+					raise TypeError(f"Unknown type {statement}")
+
+				if not statement_ok:
+					return
+				
+				food_layout.insertWidget(food_layout.count() - 1, create_statement_button(str(statement), -1, food))
+				
+				if check_syntax(self.prefs.file["nutrition"]["ideal_portions"][food]): 
+					self.prefs.write_prefs(f"nutrition/ideal_portions_cache/{food}", self.prefs.file["nutrition"]["ideal_portions"][food])
+
+				self.prefs.write_prefs(f"nutrition/ideal_portions/{food}", f"{self.prefs.file['nutrition']['ideal_portions'][food]}{statement}")
+
+		def number_dialog(statement_indx, food, button: QPushButton, title: str="Choose a number", value: float=0,):
+			ideal = self.prefs.file["nutrition"]["ideal_portions"][casestyle.snakecase(food)]
+			value = float(split_expression(ideal, include_type=False)[statement_indx])
+
+			number, ok = get_double_input_dialog(title, value=value)
+			#number, ok = QInputDialog.getDouble(nutrition_tab, title, label, value, minValue, maxValue, decimals, flags, step)
+
+			if not ok:
+				return
+
+			ideal = split_expression(ideal, include_type=False)
+			ideal[statement_indx] = number
+			ideal = "".join(map(str, ideal))
+
+			self.prefs.write_prefs(f"nutrition/ideal_portions/{casestyle.snakecase(food)}", ideal)			
+			button.setText(str(number))
+
+		def items_dialog(statement_indx, food, button: QPushButton, items: list, title: str="Choose an item"):
+			ideal = self.prefs.file["nutrition"]["ideal_portions"][casestyle.snakecase(food)]
+			value = split_expression(ideal, include_type=False)[statement_indx]
+
+			if value in OPERATORS:
+				value = OPERATORS_TO_GOODLOOKING_OPERATORS[value]
+
+			item, ok = get_item_input_dialog(items, title, parent=nutrition_tab, current_index=items.index(value))
+			#item, ok = QInputDialog.getItem(nutrition_tab, title, label, items, current=items.index(value))
+
+			if not ok:
+				return
+			
+			if item in GOODLOOKING_OPERATORS:
+				item = GOODLOOKING_OPERATORS_TO_OPERATORS[item]
+
+			ideal = split_expression(ideal, include_type=False)
+			ideal[statement_indx] = item
+			ideal = "".join(map(str, ideal))
+
+			self.prefs.write_prefs(f"nutrition/ideal_portions/{casestyle.snakecase(food)}", ideal)
+
+			if item in OPERATORS:
+				item = OPERATORS_TO_GOODLOOKING_OPERATORS[item]
+
+			button.setText(str(item))
+
+		def create_statement_button(statement: str, statement_indx: int, food: str):
+			statement_button = QPushButton(statement)
+			statement_button.setStyleSheet("font-family: Ubuntu; font-size: 15px; padding: 1px 2px 1px 2px; margin: 0px 0px 0px 0px;")
+			
+			if statement_type == StatementTypes.NUMBER:
+				statement_button.clicked.connect(
+					lambda ignore, statement_indx=statement_indx, food=food, button=statement_button: number_dialog(statement_indx, food, button, title="Enter a value")
+				)					
+			
+			elif statement_type == StatementTypes.VARIABLE:
+				statement_button.clicked.connect(
+					lambda ignore, statement_indx=statement_indx, food=food, button=statement_button: items_dialog(statement_indx, food, button, self.USER_VARIABLES, title="Choose a variable")
+				)					
+			
+			elif statement_type == StatementTypes.OPERATOR:
+				statement_button.clicked.connect(
+					lambda ignore, statement_indx=statement_indx, food=food, button=statement_button: items_dialog(statement_indx, food, button, GOODLOOKING_OPERATORS, title="Choose an operator")
+				)
+			
+			else:
+				raise TypeError(f"Unknown type {statement}")
+
+			return statement_button	
+
+		## NUTRITION TAB ##
+		nutrition_tab = QWidget()
+		nutrition_tab.setLayout(QFormLayout())
+
+		for food, food_ideal_portion in self.nutrition_info["ideal_portions"].items():
+			food_line = QWidget()
+			food_line.setLayout(QHBoxLayout())
+
+			for statement_indx, (statement, statement_type) in enumerate(split_expression(food_ideal_portion)):
+				if statement in OPERATORS:
+					statement = OPERATORS_TO_GOODLOOKING_OPERATORS[statement]
+
+				statement_button = create_statement_button(statement, statement_indx, food)
+
+				food_line.layout().addWidget(statement_button)
+
+			icon = QIcon("Images/plus_minus_icon.png")#nutrition_tab.style().standardIcon(QStyle.SP_FileDialogInfoView)
+			icon_size = min(icon.availableSizes())
+
+			extra_btn = QPushButton(icon=icon)
+			extra_btn.setFixedSize(icon_size.width(), icon_size.height())
+			extra_btn.clicked.connect(lambda ignore, food_layout=food_line.layout(), food=food: add_or_remove_dialog(food_layout, food))
+			
+			food_line.layout().addWidget(extra_btn)
+
+			nutrition_tab.layout().addRow(snake_case_to_sentence_case(food), food_line)
+
+		nutrition_tab_scroll = ScrollArea(nutrition_tab)
+
+		return nutrition_tab_scroll
+
+	def create_users_settings_tab(self, dialog=None):
 		def create_user():
 			self.add_user_dialog()
 			
@@ -1221,7 +1515,7 @@ class MainWidget(QWidget):
 			self.settings_dialog(default_tab=1) # Reopen to update users
 	
 		def remove_user(user):
-			warning = self.create_warning(dialog,   
+			warning = self.create_warning_question(dialog,   
 				message=f"Are you sure you want to remove {user}?\nThis action cannot be undone.", 
 				title=f"Remove {user}?", 
 			)
@@ -1245,7 +1539,7 @@ class MainWidget(QWidget):
 			user_info = self.prefs.file["users"][user]
 			self.add_user_dialog(
 				default_username=user, 
-				default_gender=user_info["gender"], 
+				default_sex=user_info["sex"], 
 				default_height=user_info["height"], 
 				default_weight=user_info["weight"], 
 				default_age=user_info["age"], 
@@ -1262,59 +1556,7 @@ class MainWidget(QWidget):
 			dialog.accept() # Close the dialog
 
 			self.settings_dialog(default_tab=1) # Reopen to update users
-
-		def save_dialog_geometry(*args, **kwargs):
-			dialog_geometry = dialog.geometry()
-			dialog_pos = dialog_geometry.x(), dialog_geometry.y() - 64
-
-			dialog_size = dialog_geometry.width(), dialog_geometry.height()
-
-			self.prefs.write_prefs("state/settings_dialog/pos", dialog_pos)
-			self.prefs.write_prefs("state/settings_dialog/size", dialog_size)
-
-		def close_event(*args, **kwargs):
-			if not "nutrition" in self.prefs.file["users"][self.current_user]:
-				self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{to_snake_case(meal):{"total": 0, **{to_snake_case(food):0 for food in self.foods}} for meal in self.meals}})
-			else:
-				if not self.today in self.user_nutrition:
-					self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{to_snake_case(meal):{"total": 0, **{to_snake_case(food):0 for food in self.foods}} for meal in self.meals}})
-
-			save_dialog_geometry()
-			self.update()
 		
-		def reject_event(*args, **kwargs):
-			save_dialog_geometry()
-			self.update()
-
-		dialog = QDialog()
-		dialog.setMinimumSize(500, 400)
-		
-		dialog_size = self.prefs.file["state"]["settings_dialog"]["size"]
-		dialog_pos = self.prefs.file["state"]["settings_dialog"]["pos"]
-
-		dialog.resize(dialog_size[0], dialog_size[1])
-		dialog.move(dialog_pos[0], dialog_pos[1])
-
-		dialog.setLayout(QVBoxLayout())
-		dialog.setWindowTitle("Settings")
-
-		dialog.closeEvent = close_event
-		dialog.rejected.connect(close_event)
-		dialog.accepted.connect(save_dialog_geometry)
-
-		## TABS ##
-		tabs = QTabWidget()
-		
-		## NUTRITION TAB ##
-		nutrition_tab = QWidget()
-		nutrition_tab.setLayout(QFormLayout())
-
-		for food, food_ideal_portion in self.nutrition_info["ideal_portions"].items():
-			food_line_edit = QLineEdit(food_ideal_portion)
-			
-			nutrition_tab.layout().addRow(snake_case_to_text(food), food_line_edit)
-
-		## USERS TAB ##
 		users_tab = QWidget()
 		users_tab.setLayout(QGridLayout())
 
@@ -1359,7 +1601,90 @@ class MainWidget(QWidget):
 		create_user_button = QPushButton("Add user")
 		create_user_button.clicked.connect(create_user)
 
-		users_tab.layout().addWidget(create_user_button, 1, 0)
+		users_tab.layout().addWidget(create_user_button, 1, 0)	
+
+		return users_tab	
+
+	def settings_dialog(self, default_tab=0):
+		def save_dialog_geometry(*args, **kwargs):
+			dialog_geometry = dialog.geometry()
+			dialog_pos = dialog_geometry.x(), dialog_geometry.y() - 64
+
+			dialog_size = dialog_geometry.width(), dialog_geometry.height()
+
+			self.prefs.write_prefs("state/settings_dialog/pos", dialog_pos)
+			self.prefs.write_prefs("state/settings_dialog/size", dialog_size)
+
+		def check_food_ideal_portions_expressions(event):
+			for food, food_ideal in self.prefs.file["nutrition"]["ideal_portions"].items():
+				if not check_syntax(food_ideal):
+					answer = question_dialog("Invalid expression", 
+						f"<i>{snake_case_to_sentence_case(food)} = {expression_to_goodlooking_expression(food_ideal)}</i> is a wrong expression, please fix it before continue.", 
+						buttons=(
+							(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogOkButton), "OK"), 1), 
+							(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogDiscardButton), "Reverse changes"), 0), 
+						), 
+						icon=QMessageBox.Critical, 
+						parent=dialog)
+
+					if answer == 1: # Means Reverse changes
+						self.prefs.write_prefs(f"nutrition/ideal_portions/{food}", self.prefs.file["nutrition"]["ideal_portions_cache"][food])
+						return True
+
+					event.ignore()
+					return False
+
+			return True
+
+		def close_event(event):
+			if not self.current_user == "":
+				if not "nutrition" in self.prefs.file["users"][self.current_user]:
+					self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
+				else:
+					if not self.today in self.user_nutrition:
+						self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
+
+			save_dialog_geometry()
+			if not check_food_ideal_portions_expressions(event):
+				return
+			
+			self.update()
+		
+		def on_tab_change(index):
+			pass
+			#dialog.adjustSize()		
+
+		def next_tab():
+			tabs.setCurrentIndex((tabs.currentIndex()+1) % tabs.count())
+
+		dialog = QDialog(self)
+		dialog.setFixedSize(400, 470)
+		
+		dialog_size = self.prefs.file["state"]["settings_dialog"]["size"]
+		dialog_pos = self.prefs.file["state"]["settings_dialog"]["pos"]
+
+		dialog.resize(dialog_size[0], dialog_size[1])
+		dialog.move(dialog_pos[0], dialog_pos[1])
+
+		dialog.setLayout(QVBoxLayout())
+		dialog.setWindowTitle("Settings")
+
+		dialog.closeEvent = close_event
+		dialog.rejected.connect(close_event)
+		dialog.accepted.connect(save_dialog_geometry)
+
+		## TABS ##
+		tabs = QTabWidget()
+		tabs.currentChanged.connect(on_tab_change)
+
+		tabs_shortcut = QShortcut(QKeySequence("Ctrl+Tab"), tabs)
+		tabs_shortcut.activated.connect(next_tab)
+
+		## NUTRITION TAB ##
+		nutrition_tab = self.create_ideal_portion_settings_tab()
+		
+		## USERS TAB ##
+		users_tab = self.create_users_settings_tab(dialog)
 
 		## ADD TABS ##
 		tabs.addTab(nutrition_tab, "Ideal Portions")
@@ -1370,157 +1695,10 @@ class MainWidget(QWidget):
 
 		return dialog.exec_()
 
-	def create_checkbox(self, 
-		text: str, 
-		stylesheet: str="", 
-		checked: bool=True, 
-		callback: callable=lambda x: print(f"No callback function {x}"), 
-		tooltip: str=None):
-		
-		checkbox = QCheckBox(text)
-		checkbox.setStyleSheet(stylesheet)
-		checkbox.setChecked(checked)
-		
-		if not tooltip is None:
-			checkbox.setToolTip(tooltip)
-
-		checkbox.toggled.connect(callback)
-
-		return checkbox
-
-	def create_button(self, text: str, stylesheet: str="", callback: callable=lambda x: print(f"No callback function"), tooltip: str=None):
-		button = QPushButton(text)
-		button.setStyleSheet(stylesheet)
-		button.clicked.connect(callback)
-
-		if not tooltip is None:
-			button.setToolTip(tooltip)
-
-		return button
-
-	def create_spinbox(self, 
-		prefix: str="", 
-		suffix: str="", 
-		stylesheet: str="", 
-		minium: int=0, 
-		maximum: int=10000, 
-		value: int=0, 
-		callback: callable=lambda x: print(x), 
-		tooltip: str=None):
-		
-		spinbox = QSpinBox()
-		
-		spinbox.setMinimum(minium)
-		spinbox.setMaximum(maximum)
-		
-		spinbox.setPrefix(prefix)
-		spinbox.setSuffix(suffix)
-
-		spinbox.setValue(value)
-		spinbox.setStyleSheet(stylesheet)
-
-		if not tooltip is None:
-			spinbox.setToolTip(tooltip)
-
-		spinbox.valueChanged.connect(callback)
-
-		return spinbox
-
-	def create_about_me_dialog(self):
-		######## SET UP DIALOG ########
-		dialog = QDialog() # Creating dialog
-		
-		dialog.setWindowTitle("About diet") # Setting dialog title
-		#dialog.setStyleSheet("background: #81dbe8; color: black") # Setting dialog styling
-		dialog.setWindowModality(True) # False blocks its parent window
-		dialog.setLayout(QGridLayout())
-
-		## Adding widgets ##
-		about_label = QLabel("Diet is a simple GUI app for the Timathon code jam, written in Python using PyQt5.<br/><br/>Contact me: <br/>&nbsp;&nbsp;&nbsp;&nbsp;Discord: patitotective#0127<br/>&nbsp;&nbsp;&nbsp;&nbsp;Mail: <a href='mailto:cristobalriaga@gmail.com' style='color: #FF5794'>cristobalriaga@gmail.com</a>", dialog)
-		about_label.setOpenExternalLinks(True)
-
-		about_prefs_label = QLabel("<strong>Diet </strong> uses <a href='https://patitotective.github.io/PREFS' style='color: #FF5794'>PREFS python library</a> to store the settings.")
-
-		about_prefs_label.setStyleSheet("margin: 5px 0px 0px 0px;")
-		about_prefs_label.setOpenExternalLinks(True)
-
-		source_code_link = QLabel("<a href='https://github.com/Patitotective/password_generator_gui' style='color: #FF5794'>Source code</a>", dialog)
-		source_code_link.setOpenExternalLinks(True)
-
-		dialog.layout().addWidget(about_label, 0, 0, 1, 1)
-		dialog.layout().addWidget(about_prefs_label, 1, 0, 1, 1)
-		dialog.layout().addWidget(QLabel(), 2, 0, 1, 1)
-		dialog.layout().addWidget(source_code_link, 3, 1)
-		dialog.layout().addWidget(QLabel("v0.1"), 3, 0)
-
-		self.about_me_dialog = dialog
-
-		dialog.exec_()
-
-
-class TabBar(QTabBar):
-	def tabSizeHint(self, index):
-		s = QTabBar.tabSizeHint(self, index)
-		s.transpose()
-		return s
-
-	def paintEvent(self, event):
-		painter = QStylePainter(self)
-		opt = QStyleOptionTab()
-
-		for i in range(self.count()):
-			self.initStyleOption(opt, i)
-			painter.drawControl(QStyle.CE_TabBarTabShape, opt)
-			painter.save()
-
-			s = opt.rect.size()
-			s.transpose()
-			r = QtCore.QRect(QtCore.QPoint(), s)
-			r.moveCenter(opt.rect.center())
-			opt.rect = r
-
-			c = self.tabRect(i).center()
-			painter.translate(c)
-			painter.rotate(90)
-			painter.translate(-c)
-			painter.drawControl(QStyle.CE_TabBarTabLabel, opt)
-			painter.restore()
-
-
-class VerticalTabWidget(QTabWidget):
-	def __init__(self, *args, **kwargs):
-		QTabWidget.__init__(self, *args, **kwargs)
-		self.setTabBar(TabBar())
-		self.setTabPosition(QTabWidget.West)
-
-
-def remove_key_from_dict(my_dict: dict, key: str) -> dict:
-	return {k:v for k, v in my_dict.items() if k != key}
-
-def rename_key_from_dict(my_dict: dict, key: str, new_key: str) -> dict:
-	return {new_key if k == key else k:v for k, v in my_dict.items()}
-
-def to_snake_case(string: str) -> str:
-	return string.replace(" ", "_").lower()
-
-def snake_case_to_text(string: str) -> str:
-	return string.replace("_", " ").capitalize()
-
-def dict_max(my_dict: dict) -> float:
-	num_list = []
-
-	for i in my_dict.values():
-		if isinstance(i, float) or isinstance(i, int):
-			num_list.append(i)
-		elif isinstance(i, dict):
-			num_list.append(dict_max(i))
-
-	return max(num_list)
-
 def init_app():
 	app = QApplication(sys.argv)
 	
-	mainwindow = MainWindow("Diet")
+	mainwindow = MainWindow("Healeat", verbose=True)
 	mainwindow.show()
 	sys.exit(app.exec_())
 

@@ -8,7 +8,7 @@
    version="1.1"
    id="svg5"
    inkscape:version="1.1 (1:1.1+202105261517+ce6663b3b7)"
-   sodipodi:docname="diet_gui.svg"
+   sodipodi:docname="healeat_gui.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.9200211"
-     inkscape:cx="300.25711"
-     inkscape:cy="-191.40414"
+     inkscape:zoom="0.65375144"
+     inkscape:cx="596.557"
+     inkscape:cy="-286.80625"
      inkscape:window-width="1920"
      inkscape:window-height="950"
      inkscape:window-x="0"
@@ -33,16 +33,38 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1"
      inkscape:snap-global="true"
-     inkscape:snap-intersection-paths="true" />
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:object-paths="true" />
   <defs
      id="defs2" />
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     style="display:inline">
+    <path
+       id="path10554"
+       style="fill:#ffffff;fill-rule:evenodd;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"
+       d="m -418.77814,30 h 61.76077 c 0,0 -61.76079,61.40824 -61.76077,61.408238 z"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="6.168962"
+       inkscape:export-ydpi="6.168962" />
+    <path
+       id="path10829"
+       style="fill:#000000;fill-rule:evenodd;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"
+       d="m -357.01737,91.408238 h -61.76077 c 0,0 61.76079,-61.40824 61.76077,-61.408238 z"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="6.168962"
+       inkscape:export-ydpi="6.168962" />
     <g
        id="g107511"
-       transform="matrix(1.0461923,0,0,1.0461923,91.370869,-30.972646)">
+       transform="matrix(1.0461923,0,0,1.0461923,91.370869,-30.972646)"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/logo.png"
+       inkscape:export-xdpi="174.62793"
+       inkscape:export-ydpi="174.62793">
       <path
          id="rect100151"
          style="fill:#99ca53;fill-rule:evenodd;stroke-width:0.632167;stroke-linecap:round;stroke-linejoin:round"
@@ -212,7 +234,10 @@
        style="font-size:26.4583px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;stroke-width:0.264583"
        x="26.966923"
        y="-37.968147"
-       id="text61738"><tspan
+       id="text61738"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/logo.png"
+       inkscape:export-xdpi="174.62793"
+       inkscape:export-ydpi="174.62793"><tspan
          sodipodi:role="line"
          id="tspan61736"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';stroke-width:0.264583"
@@ -220,5 +245,136 @@
          y="-37.968147"><tspan
    style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Aclonica;-inkscape-font-specification:Aclonica"
    id="tspan81440">Heal</tspan>eat</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:53.112px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;stroke-width:0.53112"
+       x="-415.51025"
+       y="68.224922"
+       id="text1737"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="6.168962"
+       inkscape:export-ydpi="6.168962"><tspan
+         sodipodi:role="line"
+         id="tspan1735"
+         style="stroke-width:0.53112"
+         x="-415.51025"
+         y="68.224922">+</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:53.112px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;fill:#ffffff;stroke-width:0.53112"
+       x="-389.4657"
+       y="97.399559"
+       id="text2851"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="6.168962"
+       inkscape:export-ydpi="6.168962"><tspan
+         sodipodi:role="line"
+         id="tspan2849"
+         style="fill:#ffffff;stroke-width:0.53112"
+         x="-389.4657"
+         y="97.399559">−</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:53.112px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;display:inline;fill:#99ca53;fill-opacity:1;stroke-width:0.53112"
+       x="-323.30338"
+       y="66.219643"
+       id="text1737-7"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="13.503235"
+       inkscape:export-ydpi="13.503235"><tspan
+         sodipodi:role="line"
+         id="tspan1735-5"
+         style="fill:#99ca53;fill-opacity:1;stroke-width:0.53112"
+         x="-323.30338"
+         y="66.219643">+</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:53.112px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;display:inline;fill:#e13131;fill-opacity:1;stroke-width:0.53112"
+       x="-294.08377"
+       y="88.515106"
+       id="text2851-3"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="13.503235"
+       inkscape:export-ydpi="13.503235"><tspan
+         sodipodi:role="line"
+         id="tspan2849-5"
+         style="fill:#e13131;fill-opacity:1;stroke-width:0.53112"
+         x="-294.08377"
+         y="88.515106">−</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4.47263;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m -322.27527,84.398593 52.92122,-52.815702"
+       id="path26431"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_minus_icon.png"
+       inkscape:export-xdpi="13.503235"
+       inkscape:export-ydpi="13.503235" />
+    <text
+       xml:space="preserve"
+       style="font-size:53.112px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;display:inline;fill:#99ca53;fill-opacity:1;stroke-width:0.53112"
+       x="-227.77557"
+       y="105.50565"
+       id="text27819"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/plus_icon.png"
+       inkscape:export-xdpi="15.240005"
+       inkscape:export-ydpi="15.240005"><tspan
+         sodipodi:role="line"
+         id="tspan27817"
+         style="fill:#99ca53;fill-opacity:1;stroke-width:0.53112"
+         x="-227.77557"
+         y="105.50565">+</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:53.112px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;display:inline;fill:#e13131;fill-opacity:1;stroke-width:0.53112"
+       x="-197.68013"
+       y="106.38686"
+       id="text27823"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/Healeat/Assets/minus_icon.png"
+       inkscape:export-xdpi="15.240015"
+       inkscape:export-ydpi="15.240015"><tspan
+         sodipodi:role="line"
+         id="tspan27821"
+         style="fill:#e13131;fill-opacity:1;stroke-width:0.53112"
+         x="-197.68013"
+         y="106.38686">−</tspan></text>
+    <rect
+       style="fill:#99ca53;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.39233;stroke-linecap:round;stroke-linejoin:round"
+       id="rect893"
+       width="40"
+       height="40"
+       x="-52.866249"
+       y="-111.37611"
+       ry="9.4753904" />
+    <path
+       id="path81600"
+       style="fill:#99ca53;fill-rule:evenodd;stroke-width:1.79424;stroke-linecap:round;stroke-linejoin:round"
+       d="m 38.276549,-172.17838 v -15.78691 c 0,-3.93703 3.169515,-7.10655 7.106542,-7.10655 h 7.893458 v 30 h -7.893458 c -3.937027,0 -7.106542,-3.16951 -7.106542,-7.10654 z"
+       sodipodi:nodetypes="sssccss" />
+    <path
+       id="path81602"
+       style="fill:#e78f3d;fill-opacity:1;fill-rule:evenodd;stroke-width:1.79424;stroke-linecap:round;stroke-linejoin:round"
+       d="m 68.276549,-187.96529 v 15.78691 c 0,3.93703 -3.169515,7.10654 -7.106543,7.10654 h -7.893457 v -30 h 7.893457 c 3.937028,0 7.106543,3.16951 7.106543,7.10655 z"
+       sodipodi:nodetypes="sssccss" />
+    <text
+       xml:space="preserve"
+       style="font-size:17.8593px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;word-spacing:0px;stroke-width:0.198436"
+       x="39.153576"
+       y="-173.79315"
+       id="text81780"><tspan
+         sodipodi:role="line"
+         id="tspan81778"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.8593px;font-family:Aclonica;-inkscape-font-specification:Aclonica;stroke-width:0.198436"
+         x="39.153576"
+         y="-173.79315">H</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.8437px;line-height:1.25;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';word-spacing:0px;stroke-width:0.198436"
+       x="53.852016"
+       y="-174.03128"
+       id="text81790"><tspan
+         sodipodi:role="line"
+         id="tspan81788"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.8437px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';stroke-width:0.198436"
+         x="53.852016"
+         y="-174.03128">e</tspan></text>
   </g>
 </svg>

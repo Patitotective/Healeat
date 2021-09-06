@@ -1,2 +1,4 @@
 PREFS
 PyQt5
+PyQtChart
+casestyle
