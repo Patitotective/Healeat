@@ -328,6 +328,9 @@ class MainWidget(QWidget):
 		return self.prefs.file["nutrition"]
 
 	def load_assets(self):
+		for file in os.listdir("./Fonts"):
+			print(file)
+
 		QFontDatabase.addApplicationFont(':/Fonts/Alatsi regular.ttf')
 		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-BI.ttf')
 
