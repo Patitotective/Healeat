@@ -102,13 +102,15 @@ class MainWindow(QMainWindow):
 		# Setting the pos and size of the window to the saved ones
 		main_window_size = self.main_widget.prefs.file["state"]["main_window"]["size"]
 		main_window_pos = self.main_widget.prefs.file["state"]["main_window"]["pos"]
+		main_window_is_maximized = self.main_widget.prefs.file["state"]["main_window"]["is_maximized"]
+
+		if main_window_is_maximized:
+			self.showMaximized()
+			return
 
 		self.resize(main_window_size[0], main_window_size[1])
 		self.move(main_window_pos[0], main_window_pos[1])
 
-		if main_window_size[0] == 0 and main_window_size[1] == 0: # Maximize at first time when open Healeat
-			self.showMaximized()
-			return
 		self.show()
 
 	def create_menu_bar(self):
@@ -182,11 +184,12 @@ class MainWindow(QMainWindow):
 		# Get the geometry (pos, size) of the window and store it in the prefs file.
 		main_window_geometry = self.geometry()
 
-		main_window_pos = main_window_geometry.x(), main_window_geometry.y() - 64
+		main_window_pos = main_window_geometry.x(), main_window_geometry.y()
 		main_window_size = main_window_geometry.width(), main_window_geometry.height()
 
 		self.main_widget.prefs.write_prefs("state/main_window/size", main_window_size)
 		self.main_widget.prefs.write_prefs("state/main_window/pos", main_window_pos)
+		self.main_widget.prefs.write_prefs("state/main_window/is_maximized", self.isMaximized())
 
 		# Close window and exit program to close all dialogs open.
 		self.close()
@@ -358,13 +361,10 @@ class MainWidget(QWidget):
 		prefs = {
 			"current_user": "", 
 			"state": {
-				"settings_dialog": {
-					"pos": (0, 0), 
-					"size": (500, 400)
-				}, 
 				"main_window": {
-					"pos": (500, 500), 
-					"size": (0, 0) # Means maximize window
+					"pos": (0, 0), 
+					"size": (0, 0), 
+					"is_maximized": True,
 				}, 
 				"meal_tabs_splitters": 
 				{
@@ -1765,14 +1765,15 @@ class MainWidget(QWidget):
 		return users_tab	
 
 	def settings_dialog(self, default_tab=0):
-		def save_dialog_geometry(*args, **kwargs):
-			dialog_geometry = dialog.geometry()
-			dialog_pos = dialog_geometry.x(), dialog_geometry.y() - 64
+		# def save_dialog_geometry(*args, **kwargs):
+		# 	dialog_geometry = dialog.geometry()
+		# 	dialog_pos = dialog_geometry.x(), dialog_geometry.y()
+		# 	dialog_size = dialog_geometry.width(), dialog_geometry.height()
 
-			dialog_size = dialog_geometry.width(), dialog_geometry.height()
+		# 	self.prefs.write_prefs("state/settings_dialog/pos", dialog_pos)
+		# 	self.prefs.write_prefs("state/settings_dialog/size", dialog_size)
 
-			self.prefs.write_prefs("state/settings_dialog/pos", dialog_pos)
-			self.prefs.write_prefs("state/settings_dialog/size", dialog_size)
+		# 	self.prefs.write_prefs("state/settings_dialog/is_maximized", dialog.isMaximized())
 
 		def check_food_ideal_portions_expressions(event):
 			for food, food_ideal in self.prefs.file["nutrition"]["ideal_portions"].items():
@@ -1805,7 +1806,7 @@ class MainWidget(QWidget):
 					if not self.today in self.user_nutrition:
 						self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
 
-			save_dialog_geometry()
+			# save_dialog_geometry()
 
 			check_syntax_answer = check_food_ideal_portions_expressions(event)
 			if not check_syntax_answer:
@@ -1834,7 +1835,7 @@ class MainWidget(QWidget):
 
 		dialog.closeEvent = close_event
 		dialog.reject = reject
-		dialog.accepted.connect(save_dialog_geometry)
+		# dialog.accepted.connect(save_dialog_geometry)
 
 		## TABS ##
 		tabs = QTabWidget()
@@ -1859,7 +1860,9 @@ class MainWidget(QWidget):
 
 def init_app():
 	app = QApplication(sys.argv)
+
 	mainwindow = MainWindow("Healeat", verbose=True)
+
 	sys.exit(app.exec_())
 
 def main():

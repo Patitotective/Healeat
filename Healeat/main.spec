@@ -10,8 +10,7 @@ a = Analysis(['main.py'],
              #pathex=[r'C:\Users\crist\Documents\Healeat\Healeat'], # Windows
              pathex=['/home/cristobal/Documents/Projects/Healeat/Healeat'], # Linux
              binaries=[],
-             #datas=[('./Images/icon.ico', './Images')], # Windows
-             datas=[('./Images/icon.png', './Images')], # Linux   
+             datas=[('./Images/icon.ico', './Images')], # Windows
              hiddenimports=hiddenimports,
              hookspath=[],
              hooksconfig={},
@@ -42,6 +41,5 @@ exe = EXE(pyz,
           target_arch=None,
           codesign_identity=None,
           entitlements_file=None, 
-          #icon='Images/icon.ico' # Windows
-          icon='Images/icon.png' # Linux
+          icon='Images/icon.ico' # Windows
         )

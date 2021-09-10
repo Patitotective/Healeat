@@ -16,6 +16,34 @@
 ## Installation
 Work in progress.
 
+## Run application from source code
+1. First you need to clone this repository by pasting this command into your terminal:
+```bash
+git clone https://github.com/Patitotective/Healeat
+```
+2. Then enter to the created directory:
+```bash
+cd Healeat
+```
+3. Install the requirements:
+- Windows:
+```bash
+pip install -r requirements.txt
+```
+- Linux/MacOS:
+```bash
+pip3 install -r requirements.txt
+```
+4. Now you can run `main.py`:
+- Windows:
+```bash
+python main.py
+```
+- Linux/MacOSX:
+```bash
+python3 main.py
+``` 
+
 ## Screenshots
 [![Main tab](https://github.com/Patitotective/Healeat/blob/main/Screenshots/main_tab.png?raw=true)](https://github.com/Patitotective/Healeat)  
 [![Calories per day chart (by foods)](https://raw.githubusercontent.com/Patitotective/Healeat/main/Screenshots/calories_per_day_tab_by_foods.png?raw=true)](https://github.com/Patitotective/Healeat)  
