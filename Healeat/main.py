@@ -106,6 +106,11 @@ class MainWindow(QMainWindow):
 		self.resize(main_window_size[0], main_window_size[1])
 		self.move(main_window_pos[0], main_window_pos[1])
 
+		if main_window_size[0] == 0 and main_window_size[1] == 0: # Maximize at first time when open Healeat
+			self.showMaximized()
+			return
+		self.show()
+
 	def create_menu_bar(self):
 		"""Create menu bar."""
 		bar = self.menuBar() # Get the menu bar of the mainwindow
@@ -118,7 +123,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="&Instructions", 
 			shortcut="Ctrl+I", 
-			callback=lambda: create_instructions_dialog(parent=self, foods=self.main_widget.FOODS, meals=self.main_widget.MEALS), 
+			callback=self.main_widget.open_instructions_dialog, 
 			parent=self)
 
 		# Create a close action that will call self.close_app
@@ -217,12 +222,14 @@ class MainWidget(QWidget):
 			}
 		}
 
-		self.MEALS = ["Breakfast", "Lunch", "Dinner", "Others"]
-		self.MEALS_COLORS = ["#e78f3d", "#33cea9", "#2279cd", "#d73b4f"]
+		self.MEALS = ("Breakfast", "Lunch", "Dinner", "Others")
+		self.MEALS_COLORS = ("#e78f3d", "#33cea9", "#2279cd", "#d73b4f")
 
-		self.FOODS = ["Vegetables", "Grains", "Fruits", "Protein", "Dairy", "Oils and fats", "Other"]
-		self.FOODS_COLORS = ["#99ca53", "#209fdf", "#6d5fd5", "#f6a625", "#e4e984", "#b5521a", "#e13131"]
+		self.FOODS = ("Vegetables", "Grains", "Fruits", "Protein", "Dairy", "Oils and fats", "Other")
+		self.FOODS_COLORS = ("#99ca53", "#209fdf", "#6d5fd5", "#f6a625", "#e4e984", "#b5521a", "#e13131")
 		
+		self.FOODS_TOOLTIPS = ("Vegetables include legumes", "Grains include cereals and flours", "Fruits", "Protein include meats, fish, chicken and eggs", "Dairy", "Oils and fats", "Other include anything else")
+
 		self.IDEAL_LINE_COLOR = "#43D052"
 
 		self.widgets = {
@@ -327,6 +334,11 @@ class MainWidget(QWidget):
 	def nutrition_info(self) -> dict:
 		return self.prefs.file["nutrition"]
 
+	def open_instructions_dialog(self):
+		"""Call create_instructions_dialog with some parameters.
+		"""
+		return create_instructions_dialog(parent=self, foods=self.FOODS_TOOLTIPS, meals=self.MEALS)
+
 	def load_assets(self):
 		QFontDatabase.addApplicationFont(':/Fonts/Alatsi regular.ttf')
 		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-B.ttf')
@@ -352,7 +364,7 @@ class MainWidget(QWidget):
 				}, 
 				"main_window": {
 					"pos": (500, 500), 
-					"size": (10000, 10000)
+					"size": (0, 0) # Means maximize window
 				}, 
 				"meal_tabs_splitters": 
 				{
@@ -470,7 +482,7 @@ class MainWidget(QWidget):
 			<hr>
 			You can change the calories you eat on each meal by food using a slider (<i>Breakfast/Vegetables</i>).<br>
 			<br>
-			After one or two days of using <b>Healeat</b> you will be able <br>to see some charts showing you the calories you ate each day by foods or by meals.
+			After one or two days of using <b>Healeat</b> you will be able <br>to see some charts showing you the calories you have ate each day by foods or by meals.
 			<hr>
 			To start you will need to create a user, do it by clicking the button below.
 		</body
@@ -495,7 +507,7 @@ class MainWidget(QWidget):
 		instructions_label = QLabel("For more information see the")
 
 		instructions_button = QPushButton("Instructions")
-		instructions_button.clicked.connect(lambda: create_instructions_dialog(parent=self, foods=self.FOODS, meals=self.MEALS))
+		instructions_button.clicked.connect(self.open_instructions_dialog)
 
 		instructions_widget.layout().addWidget(instructions_label, Qt.AlignLeft)
 		instructions_widget.layout().addWidget(instructions_button, Qt.AlignLeft)
@@ -814,7 +826,7 @@ class MainWidget(QWidget):
 			meal_tab_sliders = QWidget()
 			meal_tab_sliders.setLayout(QFormLayout())
 
-			for food, food_ideal_portion in zip(self.FOODS, self.get_ideal_portions().values()): # Vegetables, whole grains, fruits, etc
+			for food_count, (food, food_ideal_portion) in enumerate(zip(self.FOODS, self.get_ideal_portions().values())): # Vegetables, whole grains, fruits, etc
 				slider = QSlider(Qt.Horizontal)
 				slider.setFocusPolicy(Qt.StrongFocus)
 				slider.setTickPosition(QSlider.NoTicks)
@@ -832,7 +844,10 @@ class MainWidget(QWidget):
 
 				slider.valueChanged.connect(lambda value, meal=meal, food=food, slider=slider: on_slider_changed(value, meal, food, slider))
 
-				meal_tab_sliders.layout().addRow(food, slider)
+				food_label = QLabel(food)
+				food_label.setToolTip(self.FOODS_TOOLTIPS[food_count])
+
+				meal_tab_sliders.layout().addRow(food_label, slider)
 
 			meal_tab.addWidget(meal_tab_sliders)
 			
@@ -1844,9 +1859,7 @@ class MainWidget(QWidget):
 
 def init_app():
 	app = QApplication(sys.argv)
-	
 	mainwindow = MainWindow("Healeat", verbose=True)
-	mainwindow.show()
 	sys.exit(app.exec_())
 
 def main():
