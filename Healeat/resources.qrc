@@ -1,6 +1,21 @@
 <!DOCTYPE RCC><RCC version="1.0">
-<qresource>
-    <file alias="Fonts/Alatsi regular.ttf">Fonts/Alatsi regular.ttf</file>
-    <file alias="Fonts/Ubuntu-BI.ttf">Fonts/Ubuntu-BI..ttf</file>
+<qresource prefix='/Fonts'>
+    <file alias="Alatsi regular.ttf">Fonts/Alatsi regular.ttf</file>
+    <file alias="Ubuntu-B.ttf">Fonts/Ubuntu-BI.ttf</file>
+    <file alias="Ubuntu-BI.ttf">Fonts/Ubuntu-BI.ttf</file>
+    <file alias="Ubuntu-L.ttf">Fonts/Ubuntu-L.ttf</file>
+    <file alias="Ubuntu-LI.ttf">Fonts/Ubuntu-LI.ttf</file>
+    <file alias="Ubuntu-M.ttf">Fonts/Ubuntu-M.ttf</file>
+    <file alias="Ubuntu-MI.ttf">Fonts/Ubuntu-MI.ttf</file>
+    <file alias="Ubuntu-R.ttf">Fonts/Ubuntu-R.ttf</file>
+    <file alias="Ubuntu-RI.ttf">Fonts/Ubuntu-RI.ttf</file>
+    <file alias="Ubuntu-Th.ttf">Fonts/Ubuntu-Th.ttf</file>
+</qresource>
+<qresource prefix='/Images'>
+    <file alias="icon.png">Images/icon.png</file>
+    <file alias="logo.png">Images/logo.png</file>
+    <file alias="minus_icon.png">Images/minus_icon.png</file>
+    <file alias="plus_icon.png">Images/plus_icon.png</file>
+    <file alias="plus_minus_icon.png">Images/plus_minus_icon.png</file>
 </qresource>
 </RCC>

@@ -17,9 +17,15 @@
 Work in progress.
 
 ## Screenshots
-[![Main screen](https://github.com/Patitotective/Healeat/blob/main/Screenshots/main_screen.png?raw=true)](https://github.com/Patitotective/Healeat)  
-[![Calories per day chart (by meals)](https://github.com/Patitotective/Healeat/blob/main/Screenshots/calories_per_day_chart%20(by%20meals).png?raw=true)](https://github.com/Patitotective/Healeat)  
-[![Calories per day chart (by foods)](https://raw.githubusercontent.com/Patitotective/Healeat/main/Screenshots/calories_per_day_chart%20(by%20foods).png?raw=true)](https://github.com/Patitotective/Healeat)
+[![Main tab](https://github.com/Patitotective/Healeat/blob/main/Screenshots/main_screen.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Calories per day chart (by foods)](https://raw.githubusercontent.com/Patitotective/Healeat/main/Screenshots/calories_per_day_tab_by_foods.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Calories per day chart (by meals)](https://github.com/Patitotective/Healeat/blob/main/Screenshots/calories_per_day_tab_by_meals.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Advices tab](https://github.com/Patitotective/Healeat/blob/main/Screenshots/advices_tab.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Settings dialog ideal portions tab](https://github.com/Patitotective/Healeat/blob/main/Screenshots/settings_dialog_ideal_portions_tab.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Settings dialog users tab](https://github.com/Patitotective/Healeat/blob/main/Screenshots/settings_dialog_users_tab.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Edit user dialog](https://github.com/Patitotective/Healeat/blob/main/Screenshots/edit_user_dialog.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![About dialog](https://github.com/Patitotective/Healeat/blob/main/Screenshots/about_dialog.png?raw=true)](https://github.com/Patitotective/Healeat)  
+[![Instructions dialog](https://github.com/Patitotective/Healeat/blob/main/Screenshots/instructions_dialog.png?raw=true)](https://github.com/Patitotective/Healeat)  
 
 ## About
 ***Healeat*** was made in 4 weeks for the [_timathon's_ code jam](https://twtcodejam.net/timathon/) with _health_ as theme.  

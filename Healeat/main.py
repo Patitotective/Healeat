@@ -52,6 +52,8 @@ from collections import defaultdict
 from enum import Enum, auto
 
 # Dependencies
+import resources # .qrc file (Qt Resources)
+
 from extra import (
 	remove_key_from_dict, rename_key_from_dict, 
 	snake_case_to_sentence_case, 
@@ -91,7 +93,7 @@ class MainWindow(QMainWindow):
 		
 		# Window settings
 		self.setWindowTitle(self.title)
-		self.setWindowIcon(QIcon('Images/icon.png')) # set the icon		
+		self.setWindowIcon(QIcon(':/Images/icon.png')) # set the icon		
 
 		# Creating MainWidget instance and setting it as central widget
 		self.main_widget = MainWidget(parent=self, verbose=self.verbose)
@@ -208,10 +210,10 @@ class MainWidget(QWidget):
 				'other': '1.8 * weight * 3'
 			}, 
 			'ideal_meal_portions': {
-				'breakfast': 'BMR / 3.5', 
-				'lunch': 'BMR / 3.5', 
-				'dinner': 'BMR / 4.6', 
-				'others': 'BMR / 4.6'
+				'breakfast': 'BMR / 4', 
+				'lunch': 'BMR / 4', 
+				'dinner': 'BMR / 4', 
+				'others': 'BMR / 5'
 			}
 		}
 
@@ -264,8 +266,6 @@ class MainWidget(QWidget):
 		
 		# Functions to format self.USER_ADVICES
 		self.USER_ADVICES_VALUES = (lambda: self.get_advices(AdvicesTypes.LOW), lambda: self.get_advices(AdvicesTypes.EXTRA), lambda: self.get_advices(AdvicesTypes.PERFECT))
-
-		assert len(self.USER_ADVICES) == len(self.USER_ADVICES_VALUES), f"self.USER_ADVICES length is not the same as self.USER_ADVICES_VALUES length. ({self})"
 
 		self.USER_VARIABLES = ("weight", "age", "height", "BMR")
 		self.GOODLOOKING_USER_VARIABLES = [snake_case_to_sentence_case(var) for var in self.USER_VARIABLES]
@@ -328,11 +328,16 @@ class MainWidget(QWidget):
 		return self.prefs.file["nutrition"]
 
 	def load_assets(self):
-		for file in os.listdir("./Fonts"):
-			print(file)
-
 		QFontDatabase.addApplicationFont(':/Fonts/Alatsi regular.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-B.ttf')
 		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-BI.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-L.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-LI.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-M.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-MI.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-R.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-RI.ttf')
+		QFontDatabase.addApplicationFont(':/Fonts/Ubuntu-Th.ttf')
 
 	def init_prefs(self) -> None:
 		"""This function inits the PREFS class to manage preferences."""
@@ -427,7 +432,7 @@ class MainWidget(QWidget):
 	def update_tabs(self):
 		if len(self.widgets["init_widget"]) > 0:
 			self.remove_init_widget()
-			self.create_stats()
+			self.create_tabs()
 			
 		# Update calories lable with the new user daily calories
 		self.update_calories_label()
@@ -467,7 +472,7 @@ class MainWidget(QWidget):
 			<br>
 			After one or two days of using <b>Healeat</b> you will be able <br>to see some charts showing you the calories you ate each day by foods or by meals.
 			<hr>
-			To start you will need to create your first user, do it by clicking the button below.
+			To start you will need to create a user, do it by clicking the button below.
 		</body
 		"""
 		)
@@ -651,6 +656,8 @@ class MainWidget(QWidget):
 		def on_slider_changed(value, meal, food, slider):
 			self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}/{casestyle.snakecase(meal)}/{casestyle.snakecase(food)}", value)
 			
+			slider.setToolTip(f"{slider.value()}")
+
 			self.calculate_meal_total()
 			self.calculate_day_total()
 			
@@ -821,6 +828,8 @@ class MainWidget(QWidget):
 				slider_value = self.user_nutrition[self.today][casestyle.snakecase(meal)][casestyle.snakecase(food)]
 				
 				slider.setValue(slider_value)
+				slider.setToolTip(f"{slider_value}")
+
 				slider.valueChanged.connect(lambda value, meal=meal, food=food, slider=slider: on_slider_changed(value, meal, food, slider))
 
 				meal_tab_sliders.layout().addRow(food, slider)
@@ -1037,10 +1046,8 @@ class MainWidget(QWidget):
 		chart.addAxis(axisX, Qt.AlignBottom)
 		series.attachAxis(axisX)
 				
-		if self.verbose: print("Set chart x axis, with axis and series (after)")
-
 		max_calories = dict_max(self.user_nutrition) # This will find the biggest value inside all nutrition dates
-		chart.axisY().setRange(0, max_calories + 500 if max_calories > self.BMR else self.BMR + 500)
+		chart.axisY().setRange(0, max_calories + 100 if max_calories > self.BMR else self.BMR + 100)
 
 	def get_dates(self):
 		dates = []
@@ -1120,7 +1127,7 @@ class MainWidget(QWidget):
 		bar_series.attachAxis(axisY)
 
 		max_calories = dict_max(self.user_nutrition) # This will find the biggest value inside all nutrition dates
-		axisY.setRange(0, max_calories + 500 if max_calories > self.BMR else self.BMR + 500)
+		axisY.setRange(0, max_calories + 100 if max_calories > self.BMR else self.BMR + 100)
 
 		chart_view = QChartView(chart)
 		chart_view.setRenderHint(QPainter.Antialiasing)
@@ -1224,9 +1231,11 @@ class MainWidget(QWidget):
 
 			self.prefs.write_prefs("state/selected_tab", index)
 
-			if index == 1:
+			if index == 0:
+				self.update_pie_chart()
+			elif index == 1:
 				self.update_calories_per_day_tab()
-			if index == 2:
+			elif index == 2:
 				self.update_advices_tab()
 
 			self.animate_charts()
@@ -1308,7 +1317,7 @@ class MainWidget(QWidget):
 		logo.setStyleSheet("margin-bottom: 10px;")
 		logo.setAlignment(Qt.AlignCenter)
 
-		pixmap = QPixmap("Images/logo.png")
+		pixmap = QPixmap(":/Images/logo.png")
 		logo.setPixmap(pixmap)
 
 		self.layout().addWidget(logo, 0, 0, 2, 0, Qt.AlignTop)
@@ -1615,7 +1624,7 @@ class MainWidget(QWidget):
 
 				food_line.layout().addWidget(statement_button)
 
-			icon = QIcon("Images/plus_minus_icon.png")#nutrition_tab.style().standardIcon(QStyle.SP_FileDialogInfoView)
+			icon = QIcon(":/Images/plus_minus_icon.png")#nutrition_tab.style().standardIcon(QStyle.SP_FileDialogInfoView)
 			icon_size = min(icon.availableSizes())
 
 			extra_btn = QPushButton(icon=icon)

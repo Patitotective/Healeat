@@ -28,8 +28,8 @@ def question_dialog(
    if buttons is None:
       buttons = (
          (QPushButton(msg_box.style().standardIcon(QStyle.SP_DialogCancelButton), "Cancel"), 0),
-         (QPushButton(QIcon("Images/minus_icon.png"), "Remove"), 2),         
-         (QPushButton(QIcon("Images/plus_icon.png"), "Add"), 3),
+         (QPushButton(QIcon(":/Images/minus_icon.png"), "Remove"), 2),         
+         (QPushButton(QIcon(":/Images/plus_icon.png"), "Add"), 3),
       )
 
    for button, button_role in buttons:
