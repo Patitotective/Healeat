@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QPushButton, QComboBox, QGridLayout, QStyle, QDoubleSpinBox, QWidget, QMessageBox
 from PyQt5.QtGui import QIcon
+from enum import Enum, auto
 
 def question_dialog(
       title: str, 
@@ -9,17 +10,33 @@ def question_dialog(
       buttons: tuple=None
    ):
 
+   def close_event(event=None):
+      """done(0) if reject is false, and set it ture.
+      This will avoid infinite recursio
+      """
+      nonlocal rejected
+
+      if not rejected:
+         rejected = True
+         msg_box.done(0)
+
+      rejected = False
+
    msg_box = QMessageBox(icon, title, text, parent=parent)
+   rejected = False
 
    if buttons is None:
       buttons = (
          (QPushButton(msg_box.style().standardIcon(QStyle.SP_DialogCancelButton), "Cancel"), 0),
-         (QPushButton(QIcon("Images/minus_icon.png"), "Remove"), 1),         
-         (QPushButton(QIcon("Images/plus_icon.png"), "Add"), 2),
+         (QPushButton(QIcon("Images/minus_icon.png"), "Remove"), 2),         
+         (QPushButton(QIcon("Images/plus_icon.png"), "Add"), 3),
       )
 
    for button, button_role in buttons:
       msg_box.addButton(button, button_role)
+
+   msg_box.closeEvent = close_event
+   msg_box.rejected.connect(close_event)
 
    return msg_box.exec_()
 

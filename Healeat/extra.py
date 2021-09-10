@@ -7,8 +7,8 @@ from enum import Enum, auto
 OPERATORS = ("+", "-", "*", "/")
 GOODLOOKING_OPERATORS = ("+", "−", "×", "÷")
 
-GOODLOOKING_OPERATORS_TO_OPERATORS = {goodlooking_operator:operator for goodlooking_operator, operator in zip(GOODLOOKING_OPERATORS, OPERATORS)}
-OPERATORS_TO_GOODLOOKING_OPERATORS = {val:key for key, val in GOODLOOKING_OPERATORS_TO_OPERATORS.items()}
+GOODLOOKING_OPERATOR_TO_OPERATOR = {goodlooking_operator:operator for goodlooking_operator, operator in zip(GOODLOOKING_OPERATORS, OPERATORS)}
+OPERATOR_TO_GOODLOOKING_OPERATOR = {val:key for key, val in GOODLOOKING_OPERATOR_TO_OPERATOR.items()}
 
 class StatementTypes(Enum):
 	"""Types of python expressions: variable, number or operator"""
@@ -24,16 +24,31 @@ def expression_to_goodlooking_expression(expression: str):
 	for statement, statement_type in split_expression(expression):
 		value = statement
 		if statement_type == StatementTypes.OPERATOR:
-			value = OPERATORS_TO_GOODLOOKING_OPERATORS[statement]
+			value = OPERATOR_TO_GOODLOOKING_OPERATOR[statement]
+		elif statement_type == StatementTypes.VARIABLE:
+			value = snake_case_to_sentence_case(statement)
 
 		result.append(value)
 
-	return " ".join(result)
+	return " ".join(result) 
 
-def split_expression(expression: str, include_type: bool=True) -> list:    
+def get_statement_type(statement: str, operators: tuple or list=OPERATORS) -> StatementTypes:
+	if statement.replace(".", "").isdigit():
+		return StatementTypes.NUMBER
+	elif statement in operators:
+		return StatementTypes.OPERATOR
+	elif statement.isalpha():
+		return StatementTypes.VARIABLE
+
+	return StatementTypes.UNKNOWN
+
+def split_expression(expression: str, include_type: bool=True, operators: tuple or list=OPERATORS) -> list:    
 	expression = ''.join(expression.split()) # Remove all spaces
 
-	operators_in_string = [f"\\{operator}" for operator in OPERATORS if operator in expression]
+	operators_in_string = [f"\\{operator}" for operator in operators if operator in expression]
+
+	if operators_in_string == []:
+		return [[expression, get_statement_type(expression, operators=operators)]]
 
 	re_expression = f"({'|'.join(operators_in_string)})"
 	statements = re.split(re_expression, expression)
@@ -44,15 +59,7 @@ def split_expression(expression: str, include_type: bool=True) -> list:
 		if statement == "": continue
 		
 		if include_type:
-			if statement.replace(".", "").isdigit():
-				statement_type = StatementTypes.NUMBER
-			elif statement in OPERATORS:
-				statement_type = StatementTypes.OPERATOR
-			elif statement.isalpha():
-				statement_type = StatementTypes.VARIABLE
-			else:
-				statement_type = StatementTypes.UNKNOWN
-
+			statement_type = get_statement_type(statement, operators=operators)
 			result.append([statement, statement_type])
 			continue
 
@@ -61,10 +68,14 @@ def split_expression(expression: str, include_type: bool=True) -> list:
 	return result
 
 def check_syntax(expression: str):
+	if "".join(expression.split()) == "": 
+		return False
+
 	try:
 		ast.parse(expression)
 	except SyntaxError:
 		return False
+	
 	return True
 
 def create_qaction(menu, text: str, shortcut: str="", callback: callable=lambda: print("No callback"), parent=None) -> QAction:
@@ -135,7 +146,14 @@ def rename_key_from_dict(my_dict: dict, key: str, new_key: str) -> dict:
 	return {new_key if k == key else k:v for k, v in my_dict.items()}
 
 def snake_case_to_sentence_case(string: str) -> str:
-	return string.replace("_", " ").capitalize()
+	string = string.replace("_", " ")
+
+	# Means if all the characters in the string are upper
+	# Do not capitalize it
+	if not any([True for i in string if i.isupper()]):
+		string = string.capitalize()
+
+	return string
 
 def dict_max(my_dict: dict) -> float:
 	num_list = []
