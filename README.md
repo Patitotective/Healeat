@@ -14,7 +14,12 @@
 ***Healeat*** is a nutritional tracker _GUI_ application to measure your calories, watch some charts about your diet and get advices.  
 
 ## Installation
-Work in progress.
+On the [_release page_](https://github.com/Patitotective/Healeat/releases/tag/1.0v) download `Healeat.exe` for **_Windows_** and `Healeat.bin` for **_Linux_**.
+#### Direct download links
+- [**_Windows_**](https://github.com/Patitotective/Healeat/releases/download/1.0v/Healeat.exe) _(Do not forget to run it as administrator)_
+- [**_Linux_**](https://github.com/Patitotective/Healeat/releases/download/1.0v/Healeat.bin) _(Do not forget to allow executing file as program)_
+
+_Tested on Ubuntu and Windows 10._
 
 ## Run application from source code
 1. First you need to clone this repository by pasting this command into your terminal:
