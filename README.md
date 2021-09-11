@@ -19,7 +19,7 @@ On the [_release page_](https://github.com/Patitotective/Healeat/releases/tag/1.
 - [**_Windows_**](https://github.com/Patitotective/Healeat/releases/download/1.0v/Healeat.exe) _(Do not forget to run it as administrator)_
 - [**_Linux_**](https://github.com/Patitotective/Healeat/releases/download/1.0v/Healeat.bin) _(Do not forget to allow executing file as program)_
 
-_Tested on Ubuntu and Windows 10._
+_Tested on Ubuntu 20.04 and Windows 10._
 
 ## Run application from source code
 1. First you need to clone this repository by pasting this command into your terminal:
