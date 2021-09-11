@@ -105,6 +105,7 @@ class MainWindow(QMainWindow):
 		main_window_is_maximized = self.main_widget.prefs.file["state"]["main_window"]["is_maximized"]
 
 		if main_window_is_maximized:
+			self.resize(800, 600)
 			self.showMaximized()
 			return
 
@@ -184,7 +185,8 @@ class MainWindow(QMainWindow):
 		# Get the geometry (pos, size) of the window and store it in the prefs file.
 		main_window_geometry = self.geometry()
 
-		main_window_pos = main_window_geometry.x(), main_window_geometry.y()
+		# Subtract 30 to the y because of the title bar on windows is of 30 px (on ubuntu is of 64 but I only care about windows users)
+		main_window_pos = main_window_geometry.x(), main_window_geometry.y() - 30
 		main_window_size = main_window_geometry.width(), main_window_geometry.height()
 
 		self.main_widget.prefs.write_prefs("state/main_window/size", main_window_size)
@@ -1361,12 +1363,14 @@ class MainWidget(QWidget):
 					"Already existent username", 
 					"That username already exists, do you want to overwrite it?", 
 					buttons=(
-						(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogYesButton), "Yes"), 1), 
 						(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogNoButton), "No"), 0), 
+						(QPushButton(dialog.style().standardIcon(QStyle.SP_DialogYesButton), "Yes"), 2), 						
 						), 
 					icon=QMessageBox.Warning, 
 					parent=dialog)
 				
+				print(warning)
+
 				if not warning:
 					return
 		
@@ -1678,7 +1682,6 @@ class MainWidget(QWidget):
 				icon=QMessageBox.Warning, 
 				parent=parent)
 		
-
 			if not warning: # Means no
 				return
 
@@ -1779,7 +1782,8 @@ class MainWidget(QWidget):
 
 					if answer == 1: # Means Reverse changes
 						self.prefs.write_prefs(f"nutrition/ideal_portions/{food}", self.prefs.file["nutrition"]["ideal_portions_cache"][food])
-						return True
+						if check_food_ideal_portions_expressions(event): # This will check if there are other syntax errors
+							return True
 
 					if not event is None:
 						event.ignore()
@@ -1795,7 +1799,6 @@ class MainWidget(QWidget):
 				else:
 					if not self.today in self.user_nutrition:
 						self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
-
 
 			check_syntax_answer = check_food_ideal_portions_expressions(event)
 			if not check_syntax_answer:
