@@ -1765,16 +1765,6 @@ class MainWidget(QWidget):
 		return users_tab	
 
 	def settings_dialog(self, default_tab=0):
-		# def save_dialog_geometry(*args, **kwargs):
-		# 	dialog_geometry = dialog.geometry()
-		# 	dialog_pos = dialog_geometry.x(), dialog_geometry.y()
-		# 	dialog_size = dialog_geometry.width(), dialog_geometry.height()
-
-		# 	self.prefs.write_prefs("state/settings_dialog/pos", dialog_pos)
-		# 	self.prefs.write_prefs("state/settings_dialog/size", dialog_size)
-
-		# 	self.prefs.write_prefs("state/settings_dialog/is_maximized", dialog.isMaximized())
-
 		def check_food_ideal_portions_expressions(event):
 			for food, food_ideal in self.prefs.file["nutrition"]["ideal_portions"].items():
 				if not check_syntax(food_ideal):
@@ -1806,7 +1796,6 @@ class MainWidget(QWidget):
 					if not self.today in self.user_nutrition:
 						self.prefs.write_prefs(f"users/{self.current_user}/nutrition/{self.today}", {"total": 0, **{casestyle.snakecase(meal):{"total": 0, **{casestyle.snakecase(food):0 for food in self.FOODS}} for meal in self.MEALS}})
 
-			# save_dialog_geometry()
 
 			check_syntax_answer = check_food_ideal_portions_expressions(event)
 			if not check_syntax_answer:
@@ -1824,18 +1813,11 @@ class MainWidget(QWidget):
 		dialog = QDialog(self)
 		dialog.setFixedSize(400, 470)
 		
-		dialog_size = self.prefs.file["state"]["settings_dialog"]["size"]
-		dialog_pos = self.prefs.file["state"]["settings_dialog"]["pos"]
-
-		dialog.resize(dialog_size[0], dialog_size[1])
-		dialog.move(dialog_pos[0], dialog_pos[1])
-
 		dialog.setLayout(QVBoxLayout())
 		dialog.setWindowTitle("Settings")
 
 		dialog.closeEvent = close_event
 		dialog.reject = reject
-		# dialog.accepted.connect(save_dialog_geometry)
 
 		## TABS ##
 		tabs = QTabWidget()
