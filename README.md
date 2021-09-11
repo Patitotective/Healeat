@@ -28,7 +28,7 @@ _Tested on Ubuntu 20.04 and Windows 10._
 ```bash
 git clone https://github.com/Patitotective/Healeat
 ```
-_If you don't have `git` installed [download it](https://git-scm.com/download)_
+_If you don't have `git` installed [download it](https://git-scm.com/download)_.
 
 2. Then enter to the created directory:
 ```bash
